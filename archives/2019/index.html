@@ -104,7 +104,7 @@
                 </a>
                 <h4 class="sidebar-profile-name">dajyu</h4>
                 
-                    <h5 class="sidebar-profile-bio"><p>author.bio</p>
+                    <h5 class="sidebar-profile-bio"><p>하이루</p>
 </h5>
                 
             </div>
@@ -230,7 +230,7 @@
     <section class="postShorten-group main-content-wrap">
     
     
-    <article class="postShorten postShorten--thumbnailimg-bottom">
+    <article class="postShorten postShorten--thumbnailimg-right">
         <div class="postShorten-wrap">
             
             <div class="postShorten-header">
@@ -262,80 +262,18 @@
 
             </div>
             
-                <div class="postShorten-content">
+                <div class="postShorten-excerpt">
                     <p>리액트를 실무에서 아무런 기초없이 맞닥뜨리고 사용하게 되면서 어찌저찌 리액트에 대해 알게 되었지만, 기초부터 다시 다져보자는 마인드로 책을 펴서 공부를 시작하게 되었다.</p>
 <p>이미 알고 있는 내용이지만 좀 더 자세한 설명과 함께 한 번 더 알아갈 수 있어 더 좋은 것 같다.</p>
-<p>&lt;— more —&gt;</p>
-<hr>
-<h2 id="React"><a href="#React" class="headerlink" title="React?"></a>React?</h2><p>오직 View만 신경쓰는 <code>라이브러리</code> (프레임 워크 아님)</p>
-<h2 id="Virtual-DOM"><a href="#Virtual-DOM" class="headerlink" title="Virtual DOM"></a>Virtual DOM</h2><p>DOM (Document Object Model)의 복사본</p>
-<p>&lt;리액트에서의 Virtual DOM의 과정&gt;</p>
-<ol>
-<li>데이터 업데이트 =&gt; 전체 UI를 Virtual DOM에 리렌더링</li>
-<li>이전 Virtual DOM과 현재 Virtual DOM을 비교</li>
-<li>바뀐 부분만 실제 DOM에 적용</li>
-</ol>
-<hr>
-<h2 id="JSX"><a href="#JSX" class="headerlink" title="JSX"></a>JSX</h2><ul>
-<li>자바스크립트의 확장 문법으로 XML과 매우 비슷</li>
-<li>브라우저에서 실행되기 전에 코드가 <code>번들링</code>되는 과정에서 babel을 사용하여 <code>일반 자바스크립트 형태의 코드로 변환</code></li>
-</ul>
-<h3 id="JSX-장점"><a href="#JSX-장점" class="headerlink" title="JSX 장점"></a>JSX 장점</h3><ol>
-<li>보기 쉽고 익숙하다.</li>
-<li>더욱 높은 활용도</li>
-</ol>
-<h3 id="JSX-문법"><a href="#JSX-문법" class="headerlink" title="JSX 문법"></a>JSX 문법</h3><ol>
-<li>무조건 부모 요소로 감싸야함<br>=&gt; <code>why?</code> Virtual DOM에서 컴포넌트 변화를 감지할 때, 효율적으로 비교할 수 있도록 컴포넌트 내부는 하나의 DOM 트리 구조로 이루어져야 하는 규칙이 있기 때문</li>
-<li>JSX 안에서는 자바스크립트 표현식을 쓸 수 있음 (ex. <code>{name}</code>)</li>
-<li>if문 대신 조건부 연산자(=삼항 연산자) 사용 가능</li>
-<li>AND 연산자(&amp;&amp;)를 사용한 조건부 렌더링 가능</li>
-<li>undefined를 렌더링하지 않기</li>
-<li>인라인 스타일링은 객체 형태로 넣어주어야 하며, camelCase를 사용한다.</li>
-<li>class =&gt; className</li>
-<li>태그는 꼭 닫혀야 함 (ex. <code>&lt;input&gt;</code> XXX =&gt; <code>&lt;input /&gt;</code> OOO)</li>
-<li>주석은 <code>{ /* ... */ }</code> 이렇게!</li>
-</ol>
-<hr>
-<h2 id="컴포넌트"><a href="#컴포넌트" class="headerlink" title="컴포넌트"></a>컴포넌트</h2><h3 id="클래스형-컴포넌트"><a href="#클래스형-컴포넌트" class="headerlink" title="클래스형 컴포넌트"></a>클래스형 컴포넌트</h3><ul>
-<li>state 기능 및 life-cycle API 사용 가능</li>
-<li>임의 메서드 정의 가능</li>
-</ul>
-<p><code>vs. 함수형 컴포넌트 시 함수형 컴포넌트의 장점</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- 선언하기 훨씬 편함</span><br><span class="line">- 메모리 자원을 덜 사용</span><br><span class="line">- 빌드 후 배포시 파일 크기가 더 작다</span><br></pre></td></tr></table></figure>
-
-<p><code>vs. 함수형 컴포넌트 시 함수형 컴포넌트의 단점</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- state와 lifecycle 사용이 불가능하다.</span><br><span class="line">=&gt; 16.8에서 hooks가 등장하여 사용이 가능해짐</span><br></pre></td></tr></table></figure>
-
-<h3 id="props"><a href="#props" class="headerlink" title="props"></a>props</h3><p>부모 컴포넌트에서 설정함</p>
-<ul>
-<li>기본 값 설정 시엔 defaultProps</li>
-<li>props.children =&gt; 컴포넌트 태그 사이의 내용을 보여주는 props</li>
-<li>propTypes를 통한 props 검증 + isRequired를 이용하여 필수 propTypes 설정 가능</li>
-</ul>
-<h3 id="state"><a href="#state" class="headerlink" title="state"></a>state</h3><p>컴포넌트 내부에서 바뀔 수 있는 값</p>
-<ul>
-<li>하나의 함수에서 this.setState를 두 번 호출하면, 바로 바뀌지 않기 때문에 원하는 결과값을 얻을 수 없음<br>=&gt; 해결법: this.setState(prevState =&gt; …)</li>
-</ul>
-<p>참고:</p>
-<ul>
-<li>리액트를 다루는 기술 개정판 (저자: velopert 김민준)</li>
-</ul>
-
                     
+                        <a
+                            href="/2019/10/13/React-기초다지기-(1)/"
+                            class="postShorten-excerpt_link link"
+                            aria-label=": React 기초다지기 (1)"
+                        >
+                            계속 읽기
+                        </a>
                         
-
-
-                    
-                    
-                        <p>
-                            <a
-                                href="/2019/10/13/React-기초다지기-(1)/#post-footer"
-                                class="postShorten-excerpt_link link"
-                                aria-label=""
-                            >
-                                댓글 공유
-                            </a>
-                        </p>
                     
                 </div>
             
@@ -445,14 +383,14 @@
         
             <h4 id="about-card-name">dajyu</h4>
         
-            <div id="about-card-bio"><p>author.bio</p>
+            <div id="about-card-bio"><p>하이루</p>
 </div>
         
         
             <div id="about-card-job">
                 <i class="fa fa-briefcase"></i>
                 <br/>
-                <p>author.job</p>
+                <p>Web frontend</p>
 
             </div>
         
