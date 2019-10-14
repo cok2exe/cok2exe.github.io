@@ -13,7 +13,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"🐼 HTML&lt;!DOCTYPE&gt;\nDocument Type의 약어\n항상 DTD (Document Type Definition)와 연관됨\n유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨\nHTML51&lt;!DOCTYPE html&gt;\n\n\n\n\n\nlang 속성\n여러 언어로 되어있는 웹 페이지에서 사용\nlang에 따라 폰트 지정 가능 (CSS 따로 적용)\n\ncookie vs localStorage vs sessionStorage\n클라이언트 측에서 값을 저장하는 Key-value 저장소 매커니즘\n모두 문자열로만 값을 저장할 수 있음\n\n\n\ncookie\nlocalStorage\nsessionStorage\n\n\n\n생성자\n클라이언트나 서버. 서버는 Set-Cookie 헤더를 사용할 수 있습니다\n클라이언트\n클라이언트\n\n\n만료\n수동으로 설정\n영구적\n탭을 닫을 때\n\n\n브라우저 세션 전체에서 지속\n만료 설정 여부에 따라 다름\nO\nX\n\n\n모든 HTTP 요청과 함께 서버로 보냄\n쿠키는 Cookie 헤더를 통해 자동 전송됨\nX\nX\n\n\n용량 (도메인당)\n4KB\n5MB\n5MB\n\n\n접근성\n모든 윈도우\n모든 윈도우\n같은 탭\n\n\n\n\nCSS link 태그를 head 태그 사이에 위치시키면 좋은 이유\n페이지가 처음 로드되면 HTML과 CSS가 동시에 파싱됨\nHTML은 DOM(Document Object Model)을 만들고 CSS는 CSSOM(CSS Object Model)을 만듬\n문서 맨 아래에 CSS를 둘 경우, 일부 브라우저(IE 등) 점진적 렌더링을 금지시키게 되므로 사용자는 빈 페이지를 보게 됨12점진적 렌더링이란?: 가능한 한 빨리 디스플레이 할 수 있도록 컨텐츠를 렌더링하는 데 사용되는 기술\n\n\n\nscript 태그를 body 태그가 끝나기 직전에 위치시키면 좋은 이유\n&lt;script&gt; 태그는 다운로드 되고 실행되는 동안 HTML 파싱을 차단하기 때문에,\nscript 태그를 맨 아래에 두면 HTML을 먼저 파싱하여 사용자에게 보여줄 수 있음\n\nimg 태그의 srcset 속성\n기기 디스플레이 너비에 따라 다른 이미지를 보여줄 때 사용됨\n데이터 낭비를 줄일 수 있게 됨 (저해상도 이미지는 저사양 기기에, 고해상도 이미지는 고사양 기기에)\n\n\n🦄 CSSResetting 과 Normalizing CSS의 차이점\nResetting 모든 기본 브라우저 스타일을 제거\nNormalizing 필요한 일부 스타일을 남기고 제거 (나는 Normalizing을 활용하는 편)\n\nfloat\nCSS의 위치지정 속성\nfloat된 요소는 페이지 흐름의 일부가 됨\n페이지 흐름에서 제거되는 position: absolute 와는 다름\n부모요소에 float 요소가 있으면 높이가 무효화됨\n\n무효화된 높이의 해결 방법\n\nCSS의 가상 선택자 :after를 사용하여 float을 clear 해주면 해결됨\n12345.clearfix:after &#123;  content: \"\";  display: block;  clear: both;&#125;\n\n부모 요소에 overflow: auto; 또는 overflow: hidden;\n\n부모 요소 다음 라인에 &lt;div style=&quot;clear: both;&quot;&gt;&lt;/div&gt; 추가\n\n\nCSS 스프라이트 (CSS sprite)\n여러 이미지를 하나의 큰 이미지로 결합\n일반적으로 아이콘에 사용되는 기술\n\n장점\n\n여러 이미지에 대한 HTTP 요청 수를 줄임\n여러개의 아이콘을 한페이지에 보여줘야 하는 경우, 하나씩 뜨는 문제 해결\nCSS :hover 시 아이콘이 변경될 때, (hover용 이미지를 다운받기 위해) 깜빡이는 문제 해결\n\nCSS 전처리기의 장단점장점\n\nCSS의 유지보수 향상\n중첩 선택자 사용하기 쉬움\n변수 사용 가능\n반복되는 CSS를 위한 Mixins 생성 (재사용성 증가)\n\n단점\n\n전처리기를 위한 도구 필요 (컴파일시 시간 증가)\n\nPseudo-elements\nclearfix에 사용\n말풍선의 삼각형 그릴 때 사용\n:nth-child(xn) (float 사용시 clear: both; 해줘야 할때 사용) 또는 줄무늬 그려줄때?\n\nbox-sizing: boder-box\nborder와 padding도 width, height 계산에 사용됨\n디자이너가 의도한 사이즈와 일치하게 적용 가능\n\nposition\nstatic: 기본 위치. top, right, left, bottom, z-index 적용 안됨.\nrelative: 요소의 위치가 레이아웃을 변경하지 않고 자체에 상대적으로 조정됨.\nabsolute: 요소의 위치가 평소의 위치에서 제거됨. 가장 가까운 relative 부모의 블록에 의존. (그렇지 않으면 최상위 블록에 의존). absolute에 margin이 주어지면 다른 margin과 충돌하지 않음. 이 요소는 다른 요소에 영향을 주지 않음.\nfixed: 요소의 위치가 평소의 위치에서 제거됨. 뷰포트를 기준으로 위치가 지정되며 스크롤해도 해당 위치에 배치되어 있음.\nsticky: relative와 fixed의 하이브리드. 요소는 지정된 임계값을 넘을 때까지 relative 위치로 처리되며, 특정 지점에서 fixed 위치로 처리됨.\n\n\n🔥 javascript(…)\n출처: 프론트엔드 인터뷰 핸드북\n","dateCreated":"2019-10-14T10:41:34+09:00","dateModified":"2019-10-14T11:55:20+09:00","datePublished":"2019-10-14T10:41:34+09:00","description":"🐼 HTML&lt;!DOCTYPE&gt;\nDocument Type의 약어\n항상 DTD (Document Type Definition)와 연관됨\n유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨\nHTML51&lt;!DOCTYPE html&gt;\n\n\n","headline":"HTML/CSS, javascript","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/10/14/HTML-CSS-javascript/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/10/14/HTML-CSS-javascript/","keywords":"Frontend, HTML, CSS, javascript"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"\n🐼 HTML&lt;!DOCTYPE&gt;\nDocument Type의 약어\n항상 DTD (Document Type Definition)와 연관됨\n유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨\nHTML51&lt;!DOCTYPE html&gt;\n\n\n\n\n\nlang 속성\n여러 언어로 되어있는 웹 페이지에서 사용\nlang에 따라 폰트 지정 가능 (CSS 따로 적용)\n\ncookie vs localStorage vs sessionStorage\n클라이언트 측에서 값을 저장하는 Key-value 저장소 매커니즘\n모두 문자열로만 값을 저장할 수 있음\n\n\n\ncookie\nlocalStorage\nsessionStorage\n\n\n\n생성자\n클라이언트나 서버. 서버는 Set-Cookie 헤더를 사용할 수 있습니다\n클라이언트\n클라이언트\n\n\n만료\n수동으로 설정\n영구적\n탭을 닫을 때\n\n\n브라우저 세션 전체에서 지속\n만료 설정 여부에 따라 다름\nO\nX\n\n\n모든 HTTP 요청과 함께 서버로 보냄\n쿠키는 Cookie 헤더를 통해 자동 전송됨\nX\nX\n\n\n용량 (도메인당)\n4KB\n5MB\n5MB\n\n\n접근성\n모든 윈도우\n모든 윈도우\n같은 탭\n\n\n\n\nCSS link 태그를 head 태그 사이에 위치시키면 좋은 이유\n페이지가 처음 로드되면 HTML과 CSS가 동시에 파싱됨\nHTML은 DOM(Document Object Model)을 만들고 CSS는 CSSOM(CSS Object Model)을 만듬\n문서 맨 아래에 CSS를 둘 경우, 일부 브라우저(IE 등) 점진적 렌더링을 금지시키게 되므로 사용자는 빈 페이지를 보게 됨12점진적 렌더링이란?: 가능한 한 빨리 디스플레이 할 수 있도록 컨텐츠를 렌더링하는 데 사용되는 기술\n\n\n\nscript 태그를 body 태그가 끝나기 직전에 위치시키면 좋은 이유\n&lt;script&gt; 태그는 다운로드 되고 실행되는 동안 HTML 파싱을 차단하기 때문에,\nscript 태그를 맨 아래에 두면 HTML을 먼저 파싱하여 사용자에게 보여줄 수 있음\n\nimg 태그의 srcset 속성\n기기 디스플레이 너비에 따라 다른 이미지를 보여줄 때 사용됨\n데이터 낭비를 줄일 수 있게 됨 (저해상도 이미지는 저사양 기기에, 고해상도 이미지는 고사양 기기에)\n\n\n🦄 CSSResetting 과 Normalizing CSS의 차이점\nResetting 모든 기본 브라우저 스타일을 제거\nNormalizing 필요한 일부 스타일을 남기고 제거 (나는 Normalizing을 활용하는 편)\n\nfloat\nCSS의 위치지정 속성\nfloat된 요소는 페이지 흐름의 일부가 됨\n페이지 흐름에서 제거되는 position: absolute 와는 다름\n부모요소에 float 요소가 있으면 높이가 무효화됨\n\n무효화된 높이의 해결 방법\n\nCSS의 가상 선택자 :after를 사용하여 float을 clear 해주면 해결됨\n12345.clearfix:after &#123;  content: \"\";  display: block;  clear: both;&#125;\n\n부모 요소에 overflow: auto; 또는 overflow: hidden;\n\n부모 요소 다음 라인에 &lt;div style=&quot;clear: both;&quot;&gt;&lt;/div&gt; 추가\n\n\nCSS 스프라이트 (CSS sprite)\n여러 이미지를 하나의 큰 이미지로 결합\n일반적으로 아이콘에 사용되는 기술\n\n장점\n\n여러 이미지에 대한 HTTP 요청 수를 줄임\n여러개의 아이콘을 한페이지에 보여줘야 하는 경우, 하나씩 뜨는 문제 해결\nCSS :hover 시 아이콘이 변경될 때, (hover용 이미지를 다운받기 위해) 깜빡이는 문제 해결\n\nCSS 전처리기의 장단점장점\n\nCSS의 유지보수 향상\n중첩 선택자 사용하기 쉬움\n변수 사용 가능\n반복되는 CSS를 위한 Mixins 생성 (재사용성 증가)\n\n단점\n\n전처리기를 위한 도구 필요 (컴파일시 시간 증가)\n\nPseudo-elements\nclearfix에 사용\n말풍선의 삼각형 그릴 때 사용\n:nth-child(xn) (float 사용시 clear: both; 해줘야 할때 사용) 또는 줄무늬 그려줄때?\n\nbox-sizing: boder-box\nborder와 padding도 width, height 계산에 사용됨\n디자이너가 의도한 사이즈와 일치하게 적용 가능\n\nposition\nstatic: 기본 위치. top, right, left, bottom, z-index 적용 안됨.\nrelative: 요소의 위치가 레이아웃을 변경하지 않고 자체에 상대적으로 조정됨.\nabsolute: 요소의 위치가 평소의 위치에서 제거됨. 가장 가까운 relative 부모의 블록에 의존. (그렇지 않으면 최상위 블록에 의존). absolute에 margin이 주어지면 다른 margin과 충돌하지 않음. 이 요소는 다른 요소에 영향을 주지 않음.\nfixed: 요소의 위치가 평소의 위치에서 제거됨. 뷰포트를 기준으로 위치가 지정되며 스크롤해도 해당 위치에 배치되어 있음.\nsticky: relative와 fixed의 하이브리드. 요소는 지정된 임계값을 넘을 때까지 relative 위치로 처리되며, 특정 지점에서 fixed 위치로 처리됨.\n\n\n🔥 javascript(…)\n출처: 프론트엔드 인터뷰 핸드북\n","dateCreated":"2019-10-14T10:41:34+09:00","dateModified":"2019-10-14T12:12:34+09:00","datePublished":"2019-10-14T10:41:34+09:00","description":"\n🐼 HTML&lt;!DOCTYPE&gt;\nDocument Type의 약어\n항상 DTD (Document Type Definition)와 연관됨\n유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨\nHTML51&lt;!DOCTYPE html&gt;\n\n\n","headline":"HTML/CSS, javascript","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/10/14/HTML-CSS-javascript/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/10/14/HTML-CSS-javascript/","keywords":"Frontend, HTML, CSS, javascript"}</script>
     <meta name="description" content="🐼 HTML&amp;lt;!DOCTYPE&amp;gt; Document Type의 약어 항상 DTD (Document Type Definition)와 연관됨 유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨 HTML51&amp;lt;!DOCTYPE html&amp;gt;">
 <meta name="keywords" content="Frontend,HTML,CSS,javascript">
 <meta property="og:type" content="blog">
@@ -22,10 +22,12 @@
 <meta property="og:site_name" content="공부방">
 <meta property="og:description" content="🐼 HTML&amp;lt;!DOCTYPE&amp;gt; Document Type의 약어 항상 DTD (Document Type Definition)와 연관됨 유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨 HTML51&amp;lt;!DOCTYPE html&amp;gt;">
 <meta property="og:locale" content="ko">
-<meta property="og:updated_time" content="2019-10-14T02:55:20.189Z">
+<meta property="og:image" content="https://cok2exe.github.io/assets/images/htmlcssjs_thumb.png">
+<meta property="og:updated_time" content="2019-10-14T03:12:34.650Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HTML&#x2F;CSS, javascript">
 <meta name="twitter:description" content="🐼 HTML&amp;lt;!DOCTYPE&amp;gt; Document Type의 약어 항상 DTD (Document Type Definition)와 연관됨 유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨 HTML51&amp;lt;!DOCTYPE html&amp;gt;">
+<meta name="twitter:image" content="https://cok2exe.github.io/assets/images/htmlcssjs_thumb.png">
     
     
         
@@ -131,45 +133,6 @@
                 <li class="sidebar-button">
                     
                         <a  class="sidebar-button-link "
-                             href="/all-categories"
-                            
-                            title="카테고리"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">카테고리</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-tags"
-                            
-                            title="태그"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">태그</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/all-archives"
-                            
-                            title="아카이브"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">아카이브</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
                              href="#about"
                             
                             title="About"
@@ -199,23 +162,6 @@
                     
                         <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">Stack Overflow</span>
-                    </a>
-            </li>
-            
-        </ul>
-        
-            <ul class="sidebar-buttons">
-            
-                <li class="sidebar-button">
-                    
-                        <a  class="sidebar-button-link "
-                             href="/atom.xml"
-                            
-                            title="RSS"
-                        >
-                    
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
             
@@ -261,7 +207,8 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <h1 id="🐼-HTML"><a href="#🐼-HTML" class="headerlink" title="🐼 HTML"></a>🐼 HTML</h1><h3 id="lt-DOCTYPE-gt"><a href="#lt-DOCTYPE-gt" class="headerlink" title="&lt;!DOCTYPE&gt;"></a>&lt;!DOCTYPE&gt;</h3><ul>
+            <p><img src="/assets/images/htmlcssjs_thumb.png" alt="썸네일"></p>
+<h1 id="🐼-HTML"><a href="#🐼-HTML" class="headerlink" title="🐼 HTML"></a>🐼 HTML</h1><h3 id="lt-DOCTYPE-gt"><a href="#lt-DOCTYPE-gt" class="headerlink" title="&lt;!DOCTYPE&gt;"></a>&lt;!DOCTYPE&gt;</h3><ul>
 <li>Document Type의 약어</li>
 <li>항상 DTD (Document Type Definition)와 연관됨</li>
 <li>유저 에이전트에게 문서가 존중하는 HTML 사양의 버전을 알리는데 사용됨</li>
