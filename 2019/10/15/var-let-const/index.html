@@ -1,0 +1,605 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="공부방">
+    <title>var, let, const - 공부방</title>
+    <meta name="author" content="dajyu">
+    
+        <meta name="keywords" content="React,Typescript,HTML,CSS,Frontend,">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"잘못된 정보를 보고 var 변수만이 호이스팅을 허용한다고 알고 있었는데,알고보니 모든 변수가 호이스팅을 허용하며, 허용되지 않는 것처럼 보이는 이유가 TDZ(일시적 사각지대) 때문이라는 것을 알게 되었다!!!\n\n호이스팅이란, 변수를 선언하기 이전에 참조할 수 있는 상태를 말한다.\n\n\n\n내용에 들어가기 앞서, var와 let, const 변수의 가장 큰 차이점은 변수의 허용 범위가 함수 레벨인지, 블록 레벨인지에 대한 것이다.\n\n함수 레벨 스코프(Function-level scope)함수 내에서 선언된 변수는 함수 내에서만 유효하며 함수 외부에서는 참조할 수 없다. 즉, 함수 내부에서 선언한 변수는 지역 변수이며 함수 외부에서 선언한 변수는 모두 전역 변수이다.\n\n\n블록 레벨 스코프(Block-level scope)모든 코드 블록(함수, if 문, for 문, while 문, try/catch 문 등) 내에서 선언된 변수는 코드 블록 내에서만 유효하며 코드 블록 외부에서는 참조할 수 없다. 즉, 코드 블록 내부에서 선언한 변수는 지역 변수이다.\n\n\nvar\n함수 레벨 스코프(유효범위)\n전역 함수 외부에 생성된 변수는 모두 전역 변수이다.\n\n\nvar 키워드 생략 허용\n변수 중복 선언 허용\n변수 호이스팅\n\n전역 변수로 선언된 변수는 스코프가 넓어서 관리가 어렵다. 변수의 스코프는 좁을수록 좋다.이에 ES6에 let과 const가 추가되었다.\n\nlet1. 블록 레벨 스코프2. 변수 중복 선언 금지3. 호이스팅12345console.log(varVal) // undefinedvar varVal = 'a'console.log(letVal) // ReferenceError: letVal is not definedlet letVal = 'b'\n\n위의 예제를 보면 var는 호이스팅이 허용되어 에러 없이 undefined 라고 뜨지만,let은 ReferenceError가 발생하게 된다.\n이 때문에 let은 호이스팅이 허용되지 않는다고 생각했었는데, (어떤 글에서 var만이 허용된다는 식으로 적혀 있었다..흠..)알고보니 일시적 사각지대(TDZ) 안에서 변수를 선언했기 때문에 발생하는 문제였다!\n변수는 3단계에 걸쳐 생성된다.\n\n선언 단계변수를 실행 컨텍스트의 변수 객체에 등록한다. 이 변수 객체는 스코프가 참조하는 대상이 된다.\n초기화 단계변수 객체에 등록된 변수를 위한 공간을 메모리에 확보한다. 이 단계에서 변수는 undefined로 초기화 된다.\n할당 단계undefined로 초기화된 변수에 실제 값을 할당한다.\n\nvar는 선언과 초기화 단계가 동시에 진행된다. 즉, 스코프에 변수를 등록하고 메모리에 변수를 위한 공간을 확보한 후, undefined로 초기화한다.따라서 변수 선언 이전에 변수에 접근해도 스코프에 변수가 존재하기 때문에 에러가 발생하지 않는다. 이러한 현상을 호이스팅이라고 한다.\n그러나 let은 선언과 초기화 단계가 분리되어 진행된다. 즉, 스코프에 변수를 등록하지만 초기화 단계는 변수 선언문에 도달했을 때 이루어진다. 이로인해 초기화 이전에 변수에 접근하려 하면 참조 에러(ReferenceError)가 발생하는 것이다.이는 변수가 아직 초기화(변수를 위한 공간이 메모리에 확보)되지 않았기 때문이다.따라서 스코프의 시작 지점부터 초기화 시작 지점까지는 변수를 선언할 수 없다. 이때 스코프 시작 지점부터 초기화 시작 지점까지의 구간을 일시적 사각지대 (TDZ)라고 부른다.\n4. 클로저이전 게시글 HTML, CSS, javascript의 javascript 파트에서 클로저 함수를 언급했었다.\n1234567for (var i = 0; i &lt; 5; i++) &#123;  (function(j)&#123;    setTimeout(function() &#123;      console.log(j);    &#125;);  &#125;)(i)&#125;\n\n클로저 함수를 이용해 console.log가 기대값에 맞게 나오도록 수정했었는데, 이전 방법인 var 변수를 let으로 변경하는 방법도 있었다. (클로저 함수를 활용하지 않아도 수정 가능)\n12345for (let i = 0; i &lt; 5; i++) &#123;  setTimeout(function() &#123;    console.log(i);  &#125;);&#125;\n\nfor문의 let i는 for 반복문에서만 유효한 지역 변수이다. 또한 자유 변수이기도 해서 for문의 생명주기가 종료되어도 변수 i를 참조하는 함수가 존재하는 한 계속 사용이 가능하다.\n\n자유 변수내부 함수에서 선언된 변수가 아니면서 내부 함수에서 사용하는 return되는 x값 같은 변수를 자유 변수라 한다.외부에서 직접 접근할 수 없고, 항상 클로저 함수를 통해서만 접근이 가능하다.\n\n5. let은 전역객체의 프로퍼티가 아니다전역 객체(Global Object)는 모든 객체의 유일한 최상위 객체를 의미한다.Browser-side에서는 window 객체, Server-side(Node.js)에서는 global 객체를 의미한다.var로 선언된 변수를 전역 변수로 사용하면 전역 객체의 프로퍼티가 된다.\n12var gnar = 'Gnar!'console.log(window.gnar); // Gnar!\n\nlet으로 선언된 변수를 전역 변수로 사용해도 전역 객체의 프로퍼티가 아니다. (보이지 않는 개념적인 블록 내에 존재하게 된다.)\n12let teemo = 'Teemo!'console.log(window.teemo); // undefined\n\n\nconstconst는 상수를 위해 사용된다. const는 let과 비슷하지만 다른 점이 몇가지 있다.\n1. 선언과 초기화let은 재할당이 자유로우나 const는 제한된다.또한, const는 선언과 동시에 할당이 이루어져야 한다.\n1234const hello = 'world!'hello = 'hello?' // Error!!const a; // Error!!\n\n2. 상수변하지 않는 값에 사용된다. 적절한 네이밍으로 선언하여 유지보수에 도움이 될 수 있다. const pageSize = 10;\n3. const와 객체const는 재할당이 불가능하지만, 객체의 내용은 변경이 가능하다.\n12345const obj = &#123;a: 1, b: 3&#125;// obj = &#123;a: 2, b: 4&#125; // Error!obj.a = 2console.log(obj) // &#123;a: 2, b: 3&#125;\n\n\n되도록이면 변수는 const로 선언하며 재할당이 필요한 경우에만 let을 사용하는 것이 좋다.\n출처:\n\nlet, const와 블록 레벨 스코프\n자바스크립트 클로저(Javascript Closure) 사용법\n\n","dateCreated":"2019-10-15T13:43:02+09:00","dateModified":"2019-10-15T14:34:41+09:00","datePublished":"2019-10-15T13:43:02+09:00","description":"잘못된 정보를 보고 var 변수만이 호이스팅을 허용한다고 알고 있었는데,알고보니 모든 변수가 호이스팅을 허용하며, 허용되지 않는 것처럼 보이는 이유가 TDZ(일시적 사각지대) 때문이라는 것을 알게 되었다!!!\n\n호이스팅이란, 변수를 선언하기 이전에 참조할 수 있는 상태를 말한다.\n","headline":"var, let, const","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/10/15/var-let-const/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/10/15/var-let-const/","keywords":"Frontend, javascript"}</script>
+    <meta name="description" content="잘못된 정보를 보고 var 변수만이 호이스팅을 허용한다고 알고 있었는데,알고보니 모든 변수가 호이스팅을 허용하며, 허용되지 않는 것처럼 보이는 이유가 TDZ(일시적 사각지대) 때문이라는 것을 알게 되었다!!!  호이스팅이란, 변수를 선언하기 이전에 참조할 수 있는 상태를 말한다.">
+<meta name="keywords" content="Frontend,javascript">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="var, let, const">
+<meta property="og:url" content="https://cok2exe.github.io/2019/10/15/var-let-const/index.html">
+<meta property="og:site_name" content="공부방">
+<meta property="og:description" content="잘못된 정보를 보고 var 변수만이 호이스팅을 허용한다고 알고 있었는데,알고보니 모든 변수가 호이스팅을 허용하며, 허용되지 않는 것처럼 보이는 이유가 TDZ(일시적 사각지대) 때문이라는 것을 알게 되었다!!!  호이스팅이란, 변수를 선언하기 이전에 참조할 수 있는 상태를 말한다.">
+<meta property="og:locale" content="ko">
+<meta property="og:updated_time" content="2019-10-15T05:34:41.821Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="var, let, const">
+<meta name="twitter:description" content="잘못된 정보를 보고 var 변수만이 호이스팅을 허용한다고 알고 있었는데,알고보니 모든 변수가 호이스팅을 허용하며, 허용되지 않는 것처럼 보이는 이유가 TDZ(일시적 사각지대) 때문이라는 것을 알게 되었다!!!  호이스팅이란, 변수를 선언하기 이전에 참조할 수 있는 상태를 말한다.">
+    
+    
+        
+    
+    
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/cat.jpeg"/>
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/all.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            공부방
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+            <img class="header-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="저자에 대해 더 알아보기"
+                >
+                    <img class="sidebar-profile-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+                </a>
+                <h4 class="sidebar-profile-name">dajyu</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>하이루</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="About"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/cok2exe" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://stackoverflow.com/cok2exe" target="_blank" rel="noopener" title="Stack Overflow">
+                    
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            var, let, const
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-10-15T13:43:02+09:00">
+	
+		    2019/10/15
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/javascript/">javascript</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>잘못된 정보를 보고 <code>var</code> 변수만이 호이스팅을 허용한다고 알고 있었는데,<br>알고보니 모든 변수가 <code>호이스팅</code>을 허용하며, 허용되지 않는 것처럼 보이는 이유가 <code>TDZ(일시적 사각지대)</code> 때문이라는 것을 알게 되었다!!!</p>
+<blockquote>
+<p>호이스팅이란, 변수를 선언하기 이전에 참조할 수 있는 상태를 말한다.</p>
+</blockquote>
+<a id="more"></a>
+
+<p>내용에 들어가기 앞서, <code>var</code>와 <code>let</code>, <code>const</code> 변수의 가장 큰 차이점은 변수의 허용 범위가 함수 레벨인지, 블록 레벨인지에 대한 것이다.</p>
+<blockquote>
+<p><strong>함수 레벨 스코프(Function-level scope)</strong><br>함수 내에서 선언된 변수는 함수 내에서만 유효하며 함수 외부에서는 참조할 수 없다. 즉, 함수 내부에서 선언한 변수는 지역 변수이며 <code>함수 외부에서 선언한 변수는 모두 전역 변수</code>이다.</p>
+</blockquote>
+<blockquote>
+<p><strong>블록 레벨 스코프(Block-level scope)</strong><br>모든 코드 블록(함수, if 문, for 문, while 문, try/catch 문 등) 내에서 선언된 변수는 <code>코드 블록 내</code>에서만 유효하며 코드 블록 외부에서는 참조할 수 없다. 즉, 코드 블록 내부에서 선언한 변수는 지역 변수이다.</p>
+</blockquote>
+<hr>
+<h3 id="var"><a href="#var" class="headerlink" title="var"></a><code>var</code></h3><ol>
+<li>함수 레벨 스코프(유효범위)<ul>
+<li>전역 함수 외부에 생성된 변수는 모두 전역 변수이다.</li>
+</ul>
+</li>
+<li>var 키워드 생략 허용</li>
+<li>변수 중복 선언 허용</li>
+<li>변수 호이스팅</li>
+</ol>
+<p>전역 변수로 선언된 변수는 스코프가 넓어서 관리가 어렵다. 변수의 스코프는 좁을수록 좋다.<br>이에 ES6에 <code>let</code>과 <code>const</code>가 추가되었다.</p>
+<hr>
+<h3 id="let"><a href="#let" class="headerlink" title="let"></a><code>let</code></h3><h4 id="1-블록-레벨-스코프"><a href="#1-블록-레벨-스코프" class="headerlink" title="1. 블록 레벨 스코프"></a>1. 블록 레벨 스코프</h4><h4 id="2-변수-중복-선언-금지"><a href="#2-변수-중복-선언-금지" class="headerlink" title="2. 변수 중복 선언 금지"></a>2. 변수 중복 선언 금지</h4><h4 id="3-호이스팅"><a href="#3-호이스팅" class="headerlink" title="3. 호이스팅"></a>3. 호이스팅</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(varVal) <span class="comment">// undefined</span></span><br><span class="line"><span class="keyword">var</span> varVal = <span class="string">'a'</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(letVal) <span class="comment">// ReferenceError: letVal is not defined</span></span><br><span class="line"><span class="keyword">let</span> letVal = <span class="string">'b'</span></span><br></pre></td></tr></table></figure>
+
+<p>위의 예제를 보면 var는 호이스팅이 허용되어 에러 없이 undefined 라고 뜨지만,<br>let은 ReferenceError가 발생하게 된다.</p>
+<p>이 때문에 let은 호이스팅이 허용되지 않는다고 생각했었는데, <del>(어떤 글에서 var만이 허용된다는 식으로 적혀 있었다..흠..)</del><br>알고보니 <strong>일시적 사각지대(TDZ)</strong> 안에서 변수를 선언했기 때문에 발생하는 문제였다!</p>
+<p>변수는 3단계에 걸쳐 생성된다.</p>
+<ol>
+<li><strong>선언 단계</strong><br>변수를 실행 컨텍스트의 변수 객체에 등록한다. 이 변수 객체는 스코프가 참조하는 대상이 된다.</li>
+<li><strong>초기화 단계</strong><br>변수 객체에 등록된 변수를 위한 공간을 메모리에 확보한다. 이 단계에서 변수는 undefined로 초기화 된다.</li>
+<li><strong>할당 단계</strong><br>undefined로 초기화된 변수에 실제 값을 할당한다.</li>
+</ol>
+<p><code>var</code>는 <code>선언과 초기화 단계가 동시에 진행</code>된다. 즉, 스코프에 변수를 등록하고 메모리에 변수를 위한 공간을 확보한 후, undefined로 초기화한다.<br>따라서 변수 선언 이전에 변수에 접근해도 스코프에 변수가 존재하기 때문에 에러가 발생하지 않는다. 이러한 현상을 <code>호이스팅</code>이라고 한다.</p>
+<p>그러나 <code>let</code>은 선언과 초기화 단계가 분리되어 진행된다. 즉, 스코프에 변수를 등록하지만 초기화 단계는 변수 선언문에 도달했을 때 이루어진다. 이로인해 초기화 이전에 변수에 접근하려 하면 참조 에러(ReferenceError)가 발생하는 것이다.<br>이는 변수가 아직 초기화(변수를 위한 공간이 메모리에 확보)되지 않았기 때문이다.<br>따라서 스코프의 시작 지점부터 초기화 시작 지점까지는 변수를 선언할 수 없다. 이때 스코프 시작 지점부터 초기화 시작 지점까지의 구간을 <code>일시적 사각지대 (TDZ)</code>라고 부른다.</p>
+<h4 id="4-클로저"><a href="#4-클로저" class="headerlink" title="4. 클로저"></a>4. 클로저</h4><p>이전 게시글 <a href="https://cok2exe.github.io/2019/10/14/HTML-CSS-javascript/">HTML, CSS, javascript</a>의 javascript 파트에서 클로저 함수를 언급했었다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++) &#123;</span><br><span class="line">  (<span class="function"><span class="keyword">function</span>(<span class="params">j</span>)</span>&#123;</span><br><span class="line">    setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="built_in">console</span>.log(j);</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;)(i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>클로저 함수를 이용해 console.log가 기대값에 맞게 나오도록 수정했었는데, 이전 방법인 var 변수를 let으로 변경하는 방법도 있었다. (클로저 함수를 활용하지 않아도 수정 가능)</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++) &#123;</span><br><span class="line">  setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(i);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>for문의 <code>let i</code>는 for 반복문에서만 유효한 지역 변수이다. 또한 자유 변수이기도 해서 for문의 생명주기가 종료되어도 변수 i를 참조하는 함수가 존재하는 한 계속 사용이 가능하다.</p>
+<blockquote>
+<p><strong>자유 변수</strong><br>내부 함수에서 선언된 변수가 아니면서 내부 함수에서 사용하는 return되는 x값 같은 변수를 자유 변수라 한다.<br>외부에서 직접 접근할 수 없고, 항상 클로저 함수를 통해서만 접근이 가능하다.</p>
+</blockquote>
+<h4 id="5-let은-전역객체의-프로퍼티가-아니다"><a href="#5-let은-전역객체의-프로퍼티가-아니다" class="headerlink" title="5. let은 전역객체의 프로퍼티가 아니다"></a>5. let은 전역객체의 프로퍼티가 아니다</h4><p>전역 객체(Global Object)는 모든 객체의 유일한 최상위 객체를 의미한다.<br>Browser-side에서는 <code>window</code> 객체, Server-side(Node.js)에서는 <code>global</code> 객체를 의미한다.<br><code>var</code>로 선언된 변수를 전역 변수로 사용하면 전역 객체의 프로퍼티가 된다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> gnar = <span class="string">'Gnar!'</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">window</span>.gnar); <span class="comment">// Gnar!</span></span><br></pre></td></tr></table></figure>
+
+<p><code>let</code>으로 선언된 변수를 전역 변수로 사용해도 전역 객체의 프로퍼티가 아니다. (보이지 않는 개념적인 블록 내에 존재하게 된다.)</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> teemo = <span class="string">'Teemo!'</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">window</span>.teemo); <span class="comment">// undefined</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="const"><a href="#const" class="headerlink" title="const"></a><code>const</code></h3><p><code>const</code>는 상수를 위해 사용된다. const는 let과 비슷하지만 다른 점이 몇가지 있다.</p>
+<h4 id="1-선언과-초기화"><a href="#1-선언과-초기화" class="headerlink" title="1. 선언과 초기화"></a>1. 선언과 초기화</h4><p><code>let</code>은 재할당이 자유로우나 <code>const</code>는 제한된다.<br>또한, <strong><code>const</code>는 선언과 동시에 할당이 이루어져야 한다.</strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> hello = <span class="string">'world!'</span></span><br><span class="line">hello = <span class="string">'hello?'</span> <span class="comment">// Error!!</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a; <span class="comment">// Error!!</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-상수"><a href="#2-상수" class="headerlink" title="2. 상수"></a>2. 상수</h4><p>변하지 않는 값에 사용된다. 적절한 네이밍으로 선언하여 유지보수에 도움이 될 수 있다. <code>const pageSize = 10;</code></p>
+<h4 id="3-const와-객체"><a href="#3-const와-객체" class="headerlink" title="3. const와 객체"></a>3. const와 객체</h4><p><code>const</code>는 재할당이 불가능하지만, 객체의 내용은 변경이 가능하다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> obj = &#123;<span class="attr">a</span>: <span class="number">1</span>, <span class="attr">b</span>: <span class="number">3</span>&#125;</span><br><span class="line"><span class="comment">// obj = &#123;a: 2, b: 4&#125; // Error!</span></span><br><span class="line"></span><br><span class="line">obj.a = <span class="number">2</span></span><br><span class="line"><span class="built_in">console</span>.log(obj) <span class="comment">// &#123;a: 2, b: 3&#125;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>되도록이면 변수는 <code>const</code>로 선언하며 재할당이 필요한 경우에만 <code>let</code>을 사용하는 것이 좋다.</p>
+<p>출처:</p>
+<ul>
+<li><a href="https://poiemaweb.com/es6-block-scope" target="_blank" rel="noopener">let, const와 블록 레벨 스코프</a></li>
+<li><a href="https://offbyone.tistory.com/135" target="_blank" rel="noopener">자바스크립트 클로저(Javascript Closure) 사용법</a></li>
+</ul>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/Frontend/">Frontend</a> <a class="tag tag--primary tag--small t-link" href="/tags/javascript/">javascript</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/14/HTML-CSS-javascript/"
+                    data-tooltip="HTML/CSS, javascript"
+                    aria-label="다음: HTML/CSS, javascript"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2019 dajyu. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/14/HTML-CSS-javascript/"
+                    data-tooltip="HTML/CSS, javascript"
+                    aria-label="다음: HTML/CSS, javascript"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/10/15/var-let-const/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+            <h4 id="about-card-name">dajyu</h4>
+        
+            <div id="about-card-bio"><p>하이루</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Web frontend</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Asia/Seoul
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
