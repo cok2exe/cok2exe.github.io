@@ -1,0 +1,567 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="공부방">
+    <title>React 기초다지기 (2) - ref - 공부방</title>
+    <meta name="author" content="dajyu">
+    
+        <meta name="keywords" content="React,Typescript,HTML,CSS,Frontend,">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"HTML에서 id를 사용하여 DOM에 이름을 다는 것처럼 리액트 내부에서 DOM에 이름을 다는 방법이 있다. 그것이 바로 ref(reference) 이다.\n\n리액트에서 id 사용을 자제해야 하는 이유같은 컴포넌트를 여러 번 사용한다고 가정하면, HTML에서 id는 유일해야 하는데 이런 상황에선 중복 id를 가진 DOM이 여러개 생기게 됨\n\n\n\nref는 어떤 상황에서 사용되나DOM을 직접 건드려야 할 때 사용되어야 한다.\nDOM을 꼭 사용해야 하는 상황state마으로도 필요한 기능 구현이 가능하지만 가끔 state만으로 해결할 수 없는 기능이 있다.\n\n특정 input에 focus 주기\n스크롤 박스 구현하기\nCanvas 요소에 그림 그리기 …이럴 때, ref를 사용한다.\n\n\nref 사용ref를 사용하는 방법은 두가지가 있다.\n1. 콜백 함수를 통한 ref 사용가장 기본적인 방법은 콜백 함수를 사용하는 것이다.ref를 달고자 하는 요소에 ref라는 콜백 함수를 props로 전달해주면 된다.\n123&lt;input type=&#123;&#123;ref =&gt; &#123;this.input=ref&#125;&#125;&#125;&gt;// this.input은 input 요소의 DOM을 가리키게 됨\n\n이 콜백 함수는 ref 값을 파라미터로 전달받고 함수 내부에서 파라미터로 받은 ref를 컴포넌트의 멤버 변수로 설정해준다.\n2. createRef를 통한 ref 설정리액트(v16.3 이상)에 내장되어 있는 함수 createRef =&gt; 더 적은 코드로 쉽게 사용할 수 있다.\n1234567891011121314151617import React, &#123; Component &#125; from 'react';export default class RefSample extends Component &#123;  input = React.createRef();  handleFocus = () =&gt; &#123;    this.input.current.focus();  &#125;  render() &#123;    return (      &lt;div&gt;        &lt;input ref=&#123;this.input&#125; /&gt;      &lt;/div&gt;    );  &#125;&#125;\n\ncreateRef를 사용하여 ref를 만들려면 우선 컴포넌트 내부에서 멤버 변수로 React.createRef()를 담아 주어야 한다.해당 변수를 ref를 달고자 하는 요소에 ref props로 넣어주면 설정 완료.\n\n컴포넌트에 ref 달기리액트에서는 컴포넌트에도 ref 달 수 있다. 이 방법은 주로 컴포넌트 내부에 있는 DOM을 컴포넌트 외부에서 사용할 때 쓴다.\n사용법ScrollBox.js\n12345678910&#123;/* ... */&#125;scrollToBottom = () =&gt; &#123;  const &#123; scrollHeight, clientHeight &#125; = this.box;  this.box.scrollTop = scrollHeight - clientHeight;&#125;&#123;/* ... */&#125;&lt;div ref=&#123;(ref) =&gt; &#123;this.box=ref&#125;&#125;&gt;  &lt;div /&gt;&lt;/div&gt;\n\nApp.js\n12345678&#123;/* ... */&#125;&lt;div&gt;  &lt;ScrollBox    ref=&#123;(ref) =&gt; &#123;this.scrollBox=ref&#125;&#125;  /&gt;  &lt;button onClick=&#123;this.scrollBox.scrollToBottom()&#125;&gt;맨밑으로&lt;/button&gt;&lt;/div&gt;&#123;/* ... */&#125;\n\n","dateCreated":"2019-10-18T15:40:10+09:00","dateModified":"2019-10-18T16:03:20+09:00","datePublished":"2019-10-18T15:40:10+09:00","description":"HTML에서 id를 사용하여 DOM에 이름을 다는 것처럼 리액트 내부에서 DOM에 이름을 다는 방법이 있다. 그것이 바로 ref(reference) 이다.\n\n리액트에서 id 사용을 자제해야 하는 이유같은 컴포넌트를 여러 번 사용한다고 가정하면, HTML에서 id는 유일해야 하는데 이런 상황에선 중복 id를 가진 DOM이 여러개 생기게 됨\n","headline":"React 기초다지기 (2) - ref","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/","keywords":"Frontend, React"}</script>
+    <meta name="description" content="HTML에서 id를 사용하여 DOM에 이름을 다는 것처럼 리액트 내부에서 DOM에 이름을 다는 방법이 있다. 그것이 바로 ref(reference) 이다.  리액트에서 id 사용을 자제해야 하는 이유같은 컴포넌트를 여러 번 사용한다고 가정하면, HTML에서 id는 유일해야 하는데 이런 상황에선 중복 id를 가진 DOM이 여러개 생기게 됨">
+<meta name="keywords" content="Frontend,React">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="React 기초다지기 (2) - ref">
+<meta property="og:url" content="https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/index.html">
+<meta property="og:site_name" content="공부방">
+<meta property="og:description" content="HTML에서 id를 사용하여 DOM에 이름을 다는 것처럼 리액트 내부에서 DOM에 이름을 다는 방법이 있다. 그것이 바로 ref(reference) 이다.  리액트에서 id 사용을 자제해야 하는 이유같은 컴포넌트를 여러 번 사용한다고 가정하면, HTML에서 id는 유일해야 하는데 이런 상황에선 중복 id를 가진 DOM이 여러개 생기게 됨">
+<meta property="og:locale" content="ko">
+<meta property="og:updated_time" content="2019-10-18T07:03:20.630Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="React 기초다지기 (2) - ref">
+<meta name="twitter:description" content="HTML에서 id를 사용하여 DOM에 이름을 다는 것처럼 리액트 내부에서 DOM에 이름을 다는 방법이 있다. 그것이 바로 ref(reference) 이다.  리액트에서 id 사용을 자제해야 하는 이유같은 컴포넌트를 여러 번 사용한다고 가정하면, HTML에서 id는 유일해야 하는데 이런 상황에선 중복 id를 가진 DOM이 여러개 생기게 됨">
+    
+    
+        
+    
+    
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/cat.jpeg"/>
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/all.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            공부방
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+            <img class="header-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="저자에 대해 더 알아보기"
+                >
+                    <img class="sidebar-profile-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+                </a>
+                <h4 class="sidebar-profile-name">dajyu</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="About"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/cok2exe" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://stackoverflow.com/cok2exe" target="_blank" rel="noopener" title="Stack Overflow">
+                    
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            React 기초다지기 (2) - ref
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-10-18T15:40:10+09:00">
+	
+		    2019/10/18
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/React/">React</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>HTML에서 id를 사용하여 DOM에 이름을 다는 것처럼 리액트 내부에서 DOM에 이름을 다는 방법이 있다. 그것이 바로 <code>ref(reference)</code> 이다.</p>
+<blockquote>
+<p>리액트에서 id 사용을 자제해야 하는 이유<br>같은 컴포넌트를 여러 번 사용한다고 가정하면, HTML에서 id는 유일해야 하는데 이런 상황에선 중복 id를 가진 DOM이 여러개 생기게 됨</p>
+</blockquote>
+<a id="more"></a>
+
+<h1 id="ref는-어떤-상황에서-사용되나"><a href="#ref는-어떤-상황에서-사용되나" class="headerlink" title="ref는 어떤 상황에서 사용되나"></a>ref는 어떤 상황에서 사용되나</h1><p><strong>DOM</strong>을 직접 건드려야 할 때 사용되어야 한다.</p>
+<h2 id="DOM을-꼭-사용해야-하는-상황"><a href="#DOM을-꼭-사용해야-하는-상황" class="headerlink" title="DOM을 꼭 사용해야 하는 상황"></a>DOM을 꼭 사용해야 하는 상황</h2><p>state마으로도 필요한 기능 구현이 가능하지만 가끔 state만으로 해결할 수 없는 기능이 있다.</p>
+<ol>
+<li>특정 input에 focus 주기</li>
+<li>스크롤 박스 구현하기</li>
+<li>Canvas 요소에 그림 그리기 …<br>이럴 때, ref를 사용한다.</li>
+</ol>
+<hr>
+<h1 id="ref-사용"><a href="#ref-사용" class="headerlink" title="ref 사용"></a>ref 사용</h1><p>ref를 사용하는 방법은 두가지가 있다.</p>
+<h2 id="1-콜백-함수를-통한-ref-사용"><a href="#1-콜백-함수를-통한-ref-사용" class="headerlink" title="1. 콜백 함수를 통한 ref 사용"></a>1. 콜백 함수를 통한 ref 사용</h2><p>가장 기본적인 방법은 콜백 함수를 사용하는 것이다.<br>ref를 달고자 하는 요소에 ref라는 콜백 함수를 props로 전달해주면 된다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;input type=&#123;&#123;ref =&gt; &#123;<span class="keyword">this</span>.input=ref&#125;&#125;&#125;&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">// this.input은 input 요소의 DOM을 가리키게 됨</span></span><br></pre></td></tr></table></figure>
+
+<p>이 콜백 함수는 ref 값을 파라미터로 전달받고 함수 내부에서 파라미터로 받은 ref를 컴포넌트의 멤버 변수로 설정해준다.</p>
+<h2 id="2-createRef를-통한-ref-설정"><a href="#2-createRef를-통한-ref-설정" class="headerlink" title="2. createRef를 통한 ref 설정"></a>2. createRef를 통한 ref 설정</h2><p>리액트(v16.3 이상)에 내장되어 있는 함수 <code>createRef</code> =&gt; 더 적은 코드로 쉽게 사용할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; Component &#125; <span class="keyword">from</span> <span class="string">'react'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="class"><span class="keyword">class</span> <span class="title">RefSample</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</span><br><span class="line">  input = React.createRef();</span><br><span class="line"></span><br><span class="line">  handleFocus = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">this</span>.input.current.focus();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  render() &#123;</span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">      &lt;div&gt;</span><br><span class="line">        &lt;input ref=&#123;<span class="keyword">this</span>.input&#125; /&gt;</span><br><span class="line">      &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">    );</span></span><br><span class="line"><span class="regexp">  &#125;</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>createRef를 사용하여 ref를 만들려면 우선 컴포넌트 내부에서 멤버 변수로 React.createRef()를 담아 주어야 한다.<br>해당 변수를 ref를 달고자 하는 요소에 ref props로 넣어주면 설정 완료.</p>
+<hr>
+<h1 id="컴포넌트에-ref-달기"><a href="#컴포넌트에-ref-달기" class="headerlink" title="컴포넌트에 ref 달기"></a>컴포넌트에 ref 달기</h1><p>리액트에서는 컴포넌트에도 ref 달 수 있다. 이 방법은 주로 컴포넌트 내부에 있는 DOM을 컴포넌트 외부에서 사용할 때 쓴다.</p>
+<h2 id="사용법"><a href="#사용법" class="headerlink" title="사용법"></a>사용법</h2><p><code>ScrollBox.js</code></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="comment">/* ... */</span>&#125;</span><br><span class="line">scrollToBottom = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; scrollHeight, clientHeight &#125; = <span class="keyword">this</span>.box;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">this</span>.box.scrollTop = scrollHeight - clientHeight;</span><br><span class="line">&#125;</span><br><span class="line">&#123;<span class="comment">/* ... */</span>&#125;</span><br><span class="line">&lt;div ref=&#123;(ref) =&gt; &#123;<span class="keyword">this</span>.box=ref&#125;&#125;&gt;</span><br><span class="line">  &lt;div /&gt;</span><br><span class="line">&lt;<span class="regexp">/div&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>App.js</code></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="comment">/* ... */</span>&#125;</span><br><span class="line">&lt;div&gt;</span><br><span class="line">  &lt;ScrollBox</span><br><span class="line">    ref=&#123;(ref) =&gt; &#123;<span class="keyword">this</span>.scrollBox=ref&#125;&#125;</span><br><span class="line">  /&gt;</span><br><span class="line">  &lt;button onClick=&#123;<span class="keyword">this</span>.scrollBox.scrollToBottom()&#125;&gt;맨밑으로&lt;<span class="regexp">/button&gt;</span></span><br><span class="line"><span class="regexp">&lt;/</span>div&gt;</span><br><span class="line">&#123;<span class="comment">/* ... */</span>&#125;</span><br></pre></td></tr></table></figure>
+
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/Frontend/">Frontend</a> <a class="tag tag--primary tag--small t-link" href="/tags/React/">React</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/15/var-let-const/"
+                    data-tooltip="var, let, const"
+                    aria-label="다음: var, let, const"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2019 dajyu. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/15/var-let-const/"
+                    data-tooltip="var, let, const"
+                    aria-label="다음: var, let, const"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/10/18/React-기초다지기-2-ref/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+            <h4 id="about-card-name">dajyu</h4>
+        
+            <div id="about-card-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Web frontend</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Asia/Seoul
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
