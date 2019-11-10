@@ -1,0 +1,570 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="공부방">
+    <title>React 기초다지기 (4)-리덕스 - 공부방</title>
+    <meta name="author" content="dajyu">
+    
+        <meta name="keywords" content="React,Typescript,HTML,CSS,Frontend,">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"리덕스는 리액트에서 가장 많이 사용하는 상태 관리 라이브러리이다. 실무에서 한번도 써보지 못했고, (mobx만 주로 써봄) 예전에 기본적인 부분만 혼자 공부해봤었다. mobx랑은 다르게 추가해줘야하는 파일들도 많고, 여러모로 복잡했던 기억이 있다.\n\n\n리덕스를 사용하면서 접하게 될 키워드의 개념을 먼저 알아보자.\n1. 개념1.1 액션상태에 어떠한 변화가 필요하면 액션이란 것이 발생한다. 이는 하나의 객체로 표현되는데, 액션 객체는 다음과 같은 형식으로 이루어져 있다.\n123&#123;  type: &apos;TOGGLE_VALUE&apos;&#125;\n\n액션 객체는 type 필드를 반드시 가지고 있어야 한다. 이 값을 액션의 이름이라고 생각하면 된다. 그리고 그 외의 값들은 나중에 상태 업데이트를 할 때 참고해야 할 값이며, 작성자 마음대로 넣을 수 있다.\n예시 액션은 아래와 같다.\n123456789101112&#123;  type: &apos;ADD_TODO&apos;,  data: &#123;    id: 1,    text: &apos;리덕스 배우기&apos;  &#125;&#125;&#123;  type: &apos;CHANGE_INPUT&apos;,  text: &apos;안녕하세요&apos;&#125;\n\n1.2 액션 생성 함수액션 생성 함수는 액션 객체를 만들어 주는 함수이다.\n123456789101112function addTodo(data) &#123;  return &#123;    type: \"ADD_TODO\",    data  &#125;;&#125;// 화살표 함수로는 아래처럼const addTodo = data =&gt; (&#123;  type: \"ADD_TODO\",  data&#125;);\n\n어떤 변화를 일으켜야 할 때마다 액션 객체를 만들어야 하는데 매번 액션 객체를 직접 작성하기 번거로울 수 있고, 만드는 과정에서 실수로 정보를 놓칠 수 있다. 이러한 일을 방지하기 위해 이를 함수로 만들어서 관리한다.\n1.3 리듀서리듀서는 변화를 일으키는 함수이다. 액션을 만들어서 발생시키면 리듀서가 현재 상태와 전달받은 액션 객체를 파라미터로 받아 온다. 그리고 두 값을 참고하여 새로운 상태를 만들어서 반환해 준다.리듀서에서는 상태의 불변성을 유지하면서 데이터에 변화를 줘야 한다. (spread 연산자 (…) 를 사용하면 편리 =&gt; 단 객체의 구조가 복잡해지면 굉장히 번거로워지고 가독성이 나빠지기 때문에 리덕스의 상태는 최대한 깊지 않은 구조로 진행하는 것이 좋다.)\n1234567891011121314const initialState = &#123;  counter: 1&#125;;function reducer(state = initialState, action) &#123;  switch (action.type) &#123;    case INCREMENT:      return &#123;        counter: state.counter + 1      &#125;;    default:      return state;  &#125;&#125;\n\n1.4 스토어프로젝트에 리덕스를 적용하기 위해 스토어를 만든다. 한 개의 프로젝트는 단 하나의 스토어만 가질 수 있다. 스토어 안에는 현재 애플리케이션의 상태와 리듀서가 들어가 있고, 그 외에 내장 함수를 지닌다.\n1.5 디스패치디스패치는 스토어의 내장 함수 중 하나이다. 디스패치는 액션을 발생시키는 것이라고 이해하면 된다. 이 함수는 dispatch(action)과 같은 형태로 액션 객체를 파라미터로 넣어서 호출한다.이 함수가 호출되면 스토어는 리듀서 함수를 실행시켜서 새로운 상태를 만들어 준다.\n1.6 구독구독도 스토어의 내장 함수 중 하나이다. subscribe 함수 안에 리스너 함수를 파라미터로 넣어서 호출해 주면, 이 리스너 함수가 액션이 디스패치되어 상태가 업데이트될 때마다 호출된다.\n12345const listener = () =&gt; &#123;  console.log(\"상태가 업데이트됨\");&#125;;const unsubscribe = store.subscribe(listener);unsubscribe(); // 추후 구독을 비활성화할 때 함수를 호출\n\n2. 리덕스의 세가지 규칙2.1 단일 스토어하나의 애플리케이션 안에는 하나의 스토어가 들어 있다. 여러 개의 스토어를 사용하는 것이 완전히 불가능하진 않음. 상태 관리가 복잡해질 수 있으므로 권장하지 않음.\n2.2 읽기 전용 상태리덕스 상태는 읽기 전용이다. 상태를 업데이트할 때 기존의 객체는 건드리지 않고 새로운 객체를 생성해 주어야 한다.리덕스에서 불변성을 유지해야 하는 이유는 내부적으로 데이터가 변경되는 것을 감지하기 위해 얕은 비교 검사를 하기 때문이다. 객체의 변화를 감지할 때 객체의 깊숙한 안쪽까지 비교하는 것이 아니라 겉핥기 식으로 비교하여 좋은 성능을 유지할 수 있는 것이다.\n2.3 리듀서는 순수 함수변화를 일으키는 리듀서는 순수한 함수여야 한다.\n\n리듀서 함수는 이전 상태와 액션 객체를 파라미터로 받는다.\n파라미터 외의 값에는 의존하면 안된다.\n이전 상태는 절대로 건드리지 않고, 변화를 준 새로운 객체 상태를 만들어서 반환한다.\n똑같은 파라미터로 호출된 리듀서 함수는 언제나 똑같은 결과 값을 반환해야 한다.\n\n리듀서 함수 내부에서 랜덤 값을 만들거나, Date 함수를 사용하여 현재 시간을 가져오거나, 네트워크 요청을 한다면, 파라미터가 같아도 다른 결과를 만들어 낼 수 있기 때문에 사용하면 안된다. (이러한 작업은 리듀서 함수 바깥에서 처리해 주어야 함)\n참고: 리액트를 다루는 기술 개정판 (저자: velopert 김민준)\n","dateCreated":"2019-11-10T14:31:12+09:00","dateModified":"2019-11-10T15:07:58+09:00","datePublished":"2019-11-10T14:31:12+09:00","description":"리덕스는 리액트에서 가장 많이 사용하는 상태 관리 라이브러리이다. 실무에서 한번도 써보지 못했고, (mobx만 주로 써봄) 예전에 기본적인 부분만 혼자 공부해봤었다. mobx랑은 다르게 추가해줘야하는 파일들도 많고, 여러모로 복잡했던 기억이 있다.","headline":"React 기초다지기 (4)-리덕스","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/","keywords":"React, Frontend"}</script>
+    <meta name="description" content="리덕스는 리액트에서 가장 많이 사용하는 상태 관리 라이브러리이다. 실무에서 한번도 써보지 못했고, (mobx만 주로 써봄) 예전에 기본적인 부분만 혼자 공부해봤었다. mobx랑은 다르게 추가해줘야하는 파일들도 많고, 여러모로 복잡했던 기억이 있다.">
+<meta name="keywords" content="React,Frontend">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="React 기초다지기 (4)-리덕스">
+<meta property="og:url" content="https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/index.html">
+<meta property="og:site_name" content="공부방">
+<meta property="og:description" content="리덕스는 리액트에서 가장 많이 사용하는 상태 관리 라이브러리이다. 실무에서 한번도 써보지 못했고, (mobx만 주로 써봄) 예전에 기본적인 부분만 혼자 공부해봤었다. mobx랑은 다르게 추가해줘야하는 파일들도 많고, 여러모로 복잡했던 기억이 있다.">
+<meta property="og:locale" content="ko">
+<meta property="og:updated_time" content="2019-11-10T06:07:58.224Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="React 기초다지기 (4)-리덕스">
+<meta name="twitter:description" content="리덕스는 리액트에서 가장 많이 사용하는 상태 관리 라이브러리이다. 실무에서 한번도 써보지 못했고, (mobx만 주로 써봄) 예전에 기본적인 부분만 혼자 공부해봤었다. mobx랑은 다르게 추가해줘야하는 파일들도 많고, 여러모로 복잡했던 기억이 있다.">
+    
+    
+        
+    
+    
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/cat.jpeg"/>
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/all.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            공부방
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+            <img class="header-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="저자에 대해 더 알아보기"
+                >
+                    <img class="sidebar-profile-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+                </a>
+                <h4 class="sidebar-profile-name">dajyu</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="About"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/cok2exe" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://stackoverflow.com/cok2exe" target="_blank" rel="noopener" title="Stack Overflow">
+                    
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            React 기초다지기 (4)-리덕스
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-11-10T14:31:12+09:00">
+	
+		    2019/11/10
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/React/">React</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>리덕스는 리액트에서 가장 많이 사용하는 <code>상태 관리 라이브러리</code>이다. 실무에서 한번도 써보지 못했고, (mobx만 주로 써봄) 예전에 기본적인 부분만 혼자 공부해봤었다. mobx랑은 다르게 추가해줘야하는 파일들도 많고, 여러모로 복잡했던 기억이 있다.</p>
+<a id="more"></a>
+
+<p>리덕스를 사용하면서 접하게 될 키워드의 개념을 먼저 알아보자.</p>
+<h2 id="1-개념"><a href="#1-개념" class="headerlink" title="1. 개념"></a>1. 개념</h2><h3 id="1-1-액션"><a href="#1-1-액션" class="headerlink" title="1.1 액션"></a>1.1 액션</h3><p>상태에 어떠한 변화가 필요하면 액션이란 것이 발생한다. 이는 하나의 객체로 표현되는데, 액션 객체는 다음과 같은 형식으로 이루어져 있다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  type: &apos;TOGGLE_VALUE&apos;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>액션 객체는 <u>type 필드를 반드시 가지고 있어야 한다.</u> 이 값을 액션의 이름이라고 생각하면 된다. 그리고 그 외의 값들은 나중에 상태 업데이트를 할 때 참고해야 할 값이며, 작성자 마음대로 넣을 수 있다.</p>
+<p>예시 액션은 아래와 같다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  type: &apos;ADD_TODO&apos;,</span><br><span class="line">  data: &#123;</span><br><span class="line">    id: 1,</span><br><span class="line">    text: &apos;리덕스 배우기&apos;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  type: &apos;CHANGE_INPUT&apos;,</span><br><span class="line">  text: &apos;안녕하세요&apos;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-액션-생성-함수"><a href="#1-2-액션-생성-함수" class="headerlink" title="1.2 액션 생성 함수"></a>1.2 액션 생성 함수</h3><p>액션 생성 함수는 액션 객체를 만들어 주는 함수이다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">addTodo</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    type: <span class="string">"ADD_TODO"</span>,</span><br><span class="line">    data</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 화살표 함수로는 아래처럼</span></span><br><span class="line"><span class="keyword">const</span> addTodo = <span class="function"><span class="params">data</span> =&gt;</span> (&#123;</span><br><span class="line">  type: <span class="string">"ADD_TODO"</span>,</span><br><span class="line">  data</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>어떤 변화를 일으켜야 할 때마다 액션 객체를 만들어야 하는데 매번 액션 객체를 직접 작성하기 번거로울 수 있고, 만드는 과정에서 실수로 정보를 놓칠 수 있다. 이러한 일을 방지하기 위해 이를 함수로 만들어서 관리한다.</p>
+<h3 id="1-3-리듀서"><a href="#1-3-리듀서" class="headerlink" title="1.3 리듀서"></a>1.3 리듀서</h3><p>리듀서는 <code>변화를 일으키는 함수</code>이다. 액션을 만들어서 발생시키면 리듀서가 현재 상태와 전달받은 액션 객체를 파라미터로 받아 온다. 그리고 두 값을 참고하여 <code>새로운 상태를 만들어서 반환</code>해 준다.<br>리듀서에서는 상태의 <code>불변성</code>을 유지하면서 데이터에 변화를 줘야 한다. (spread 연산자 (…) 를 사용하면 편리 =&gt; 단 객체의 구조가 복잡해지면 굉장히 번거로워지고 가독성이 나빠지기 때문에 리덕스의 상태는 최대한 깊지 않은 구조로 진행하는 것이 좋다.)</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> initialState = &#123;</span><br><span class="line">  counter: <span class="number">1</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">reducer</span>(<span class="params">state = initialState, action</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">switch</span> (action.type) &#123;</span><br><span class="line">    <span class="keyword">case</span> INCREMENT:</span><br><span class="line">      <span class="keyword">return</span> &#123;</span><br><span class="line">        counter: state.counter + <span class="number">1</span></span><br><span class="line">      &#125;;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">return</span> state;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-4-스토어"><a href="#1-4-스토어" class="headerlink" title="1.4 스토어"></a>1.4 스토어</h3><p>프로젝트에 리덕스를 적용하기 위해 스토어를 만든다. 한 개의 프로젝트는 단 하나의 스토어만 가질 수 있다. 스토어 안에는 현재 애플리케이션의 상태와 리듀서가 들어가 있고, 그 외에 내장 함수를 지닌다.</p>
+<h3 id="1-5-디스패치"><a href="#1-5-디스패치" class="headerlink" title="1.5 디스패치"></a>1.5 디스패치</h3><p>디스패치는 스토어의 내장 함수 중 하나이다. 디스패치는 <code>액션을 발생시키는 것</code>이라고 이해하면 된다. 이 함수는 <code>dispatch(action)</code>과 같은 형태로 액션 객체를 파라미터로 넣어서 호출한다.<br>이 함수가 호출되면 스토어는 리듀서 함수를 실행시켜서 새로운 상태를 만들어 준다.</p>
+<h3 id="1-6-구독"><a href="#1-6-구독" class="headerlink" title="1.6 구독"></a>1.6 구독</h3><p>구독도 스토어의 내장 함수 중 하나이다. <code>subscribe</code> 함수 안에 리스너 함수를 파라미터로 넣어서 호출해 주면, 이 리스너 함수가 액션이 디스패치되어 상태가 업데이트될 때마다 호출된다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> listener = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">"상태가 업데이트됨"</span>);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">const</span> unsubscribe = store.subscribe(listener);</span><br><span class="line">unsubscribe(); <span class="comment">// 추후 구독을 비활성화할 때 함수를 호출</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-리덕스의-세가지-규칙"><a href="#2-리덕스의-세가지-규칙" class="headerlink" title="2. 리덕스의 세가지 규칙"></a>2. 리덕스의 세가지 규칙</h2><h3 id="2-1-단일-스토어"><a href="#2-1-단일-스토어" class="headerlink" title="2.1 단일 스토어"></a>2.1 단일 스토어</h3><p>하나의 애플리케이션 안에는 하나의 스토어가 들어 있다. 여러 개의 스토어를 사용하는 것이 완전히 불가능하진 않음. 상태 관리가 복잡해질 수 있으므로 권장하지 않음.</p>
+<h3 id="2-2-읽기-전용-상태"><a href="#2-2-읽기-전용-상태" class="headerlink" title="2.2 읽기 전용 상태"></a>2.2 읽기 전용 상태</h3><p>리덕스 상태는 읽기 전용이다. 상태를 업데이트할 때 기존의 객체는 건드리지 않고 새로운 객체를 생성해 주어야 한다.<br>리덕스에서 불변성을 유지해야 하는 이유는 내부적으로 데이터가 변경되는 것을 감지하기 위해 얕은 비교 검사를 하기 때문이다. 객체의 변화를 감지할 때 객체의 깊숙한 안쪽까지 비교하는 것이 아니라 겉핥기 식으로 비교하여 좋은 성능을 유지할 수 있는 것이다.</p>
+<h3 id="2-3-리듀서는-순수-함수"><a href="#2-3-리듀서는-순수-함수" class="headerlink" title="2.3 리듀서는 순수 함수"></a>2.3 리듀서는 순수 함수</h3><p>변화를 일으키는 리듀서는 순수한 함수여야 한다.</p>
+<ul>
+<li>리듀서 함수는 이전 상태와 액션 객체를 파라미터로 받는다.</li>
+<li>파라미터 외의 값에는 의존하면 안된다.</li>
+<li>이전 상태는 절대로 건드리지 않고, 변화를 준 새로운 객체 상태를 만들어서 반환한다.</li>
+<li>똑같은 파라미터로 호출된 리듀서 함수는 언제나 똑같은 결과 값을 반환해야 한다.</li>
+</ul>
+<p>리듀서 함수 내부에서 랜덤 값을 만들거나, Date 함수를 사용하여 현재 시간을 가져오거나, 네트워크 요청을 한다면, 파라미터가 같아도 다른 결과를 만들어 낼 수 있기 때문에 사용하면 안된다. (이러한 작업은 리듀서 함수 바깥에서 처리해 주어야 함)</p>
+<p>참고: <a href="http://www.yes24.com/Product/Goods/78233628?scode=032&OzSrank=1" target="_blank" rel="noopener">리액트를 다루는 기술 개정판 (저자: velopert 김민준)</a></p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/Frontend/">Frontend</a> <a class="tag tag--primary tag--small t-link" href="/tags/React/">React</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/20/React-기초다지기-3-Hooks/"
+                    data-tooltip="React 기초다지기 (3)-Hooks"
+                    aria-label="다음: React 기초다지기 (3)-Hooks"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2019 dajyu. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/10/20/React-기초다지기-3-Hooks/"
+                    data-tooltip="React 기초다지기 (3)-Hooks"
+                    aria-label="다음: React 기초다지기 (3)-Hooks"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/10/React-기초다지기-4-리덕스/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+            <h4 id="about-card-name">dajyu</h4>
+        
+            <div id="about-card-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Web frontend</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Asia/Seoul
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
