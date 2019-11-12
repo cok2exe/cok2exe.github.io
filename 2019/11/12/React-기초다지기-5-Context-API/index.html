@@ -1,0 +1,606 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="공부방">
+    <title>React 기초다지기-(5) Context API  - 공부방</title>
+    <meta name="author" content="dajyu">
+    
+        <meta name="keywords" content="React,Typescript,HTML,CSS,Frontend,">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"Context API는 리액트 프로젝트에서 전역적으로 사용할 데이터가 있을 때 유용한 기능이다. Context API는 리액트 v16.3부터 사용하기 쉽게 많이 개선되었다. 이 기능은 리액트 관련 라이브러리에서도 많이 사용되고 있다.\n\n리덕스, 리액트 라우터, styled-components 등의 라이브러리는 Context API를 기반으로 구현되어 있다.\n\n\n\nContext API를 사용한 전역 상태 관리 흐름리액트는 컴포넌트 간에 데이터를 props로 전달하기 때문에 컴포넌트 여기저기서 필요한 데이터가 있을 때는 주로 최상위 컴포넌트인 App의 state에 넣어서 관리한다.\n123456789        [App]      /       \\     (A)      (H)    /   \\      | \\   (B)  (C)   (I)(J)  / | \\(D)(E)(F)    |   (G)\n\nG 컴포넌트는 전역 상태를 업데이트시키고, F와 J 컴포넌트는 업데이트된 상태를 렌더링한다. 그렇다면 App 컴포넌트에서는 당므과 같이 상태와 업데이트 함수를 정의해야 한다.\n12const [value, setValue] = useState(\"hello\");const onSetValue = useCallback(value =&gt; setValue(value), []);\n\n그리고 App이 지니고 있는 value 값을 F 컴포넌트와 J 컴포넌트에 전달하려면 여러 컴포넌트를 거쳐야 한다. F의 경우 App -&gt; A -&gt; B -&gt; F의 흐름이고, J의 경우 App -&gt; A -&gt; B -&gt; J의 흐름이다. 추가로 G 컴포넌트에 상태 업데이트 함수를 전달할 때도 App -&gt; A -&gt; B -&gt; E -&gt; G와 같이 복잡하게 여러 번 거쳐서 전달해야 한다.\n실제 리액트 프로젝트에서는 더 많은 컴포넌트를 거쳐야 할 때도 있고, 다루어야 하는 데이터가 훨씬 많아질 수도 있으므로, 이런 방식을 사용하면 유지 보수성이 낮아질 가능성이 있다.\n이로 인해 리덕스나 MobX 같은 상태 관리 라이브러리를 사용하여 전역 상태 관리 작업을 편하게 처리하기도 한다. 리액트 v16.3 업데이트 이후 Context API가 많이 개선되었기에 별도의 라이브러리 사용없이 전역 상태 관리가 쉬워졌다.\n123456789        [App]      /       \\     (A)      (H)    /   \\      | \\   (B)  (C)   (I)(J)  / | \\           |(D)(E)(F)         |    |     \\       |   (G)  ㅡ   Context\n\n위와 같이 기존에는 상위 컴포넌트에서 여러 컴포넌트를 거쳐 props로 원하는 값을 전달했지만, Context API를 사용하면 Context를 만들어 단 한번에 원하는 값을 받아와서 사용할 수 있다.\n\nContext API 사용법새 Context를 만들 때는 createContext 함수를 사용한다. 파라미터에는 해당 Context의 기본 상태를 지정한다.\n12345import &#123; createContext &#125; from \"react\";const ColorContext = createContext(&#123; color: \"black\" &#125;);export default ColorContext;\n\nColorBox 라는 컴포넌트를 만들어서 색상을 보여주는데, 이때 색상을 props로 받아 오는 것이 아니라 ColorContext 안에 들어 있는 Consumer라는 컴포넌트를 통해 색상을 조회할 수 있다.\n1234567891011121314151617181920import React from \"react\";import ColorContext from \"../contexts/color\";const ColorBox = () =&gt; &#123;  return (    &lt;ColorContext.Consumer&gt;      &#123;value =&gt; (        &lt;div          style=&#123;&#123;            width: \"64px\",            height: \"64px\",            backgroundColor: value.color          &#125;&#125;        /&gt;      )&#125;    &lt;/ColorContext.Consumer&gt;  );&#125;;export default ColorBox;\n\nConsumer 사이에 중괄호를 열어서 그 안에 함수를 넣어 준다. 이러한 패턴을 Function as a child, 혹은 Render Props라고 한다. 컴포넌트의 children이 있어야 할 자리에 일반 JSX 혹은 문자열이 아닌 함수를 전달하는 것이다.\nProvider를 사용하면 Context의 value를 변경할 수 있다.\n123456789101112131415import React from \"react\";import ColorBox from \"./components/ColorBox\";import ColorContext from \"./contexts/color\";function App() &#123;  return (    &lt;ColorContext.Provider value=&#123;&#123; color: \"red\" &#125;&#125;&gt;      &lt;div&gt;        &lt;ColorBox /&gt;      &lt;/div&gt;    &lt;/ColorContext.Provider&gt;  );&#125;export default App;\n\n기존에 createContext 함수를 사용할 때는 파라미터로 Context의 기본값을 넣어 주었는데, 이 기본값은 Provider를 사용하지 않았을 때만 사용된다. 만약 Provider를 사용했는데 value를 명시하지 않았다면, 이 기본값을 사용하지 않기 때문에 오류가 발생한다.\n다음의 코드는 오류가 발생하는 코드이다.\n123456789101112131415import React from \"react\";import ColorBox from \"./components/ColorBox\";import ColorContext from \"./contexts/color\";function App() &#123;  return (    &lt;ColorContext.Provider&gt;      &lt;div&gt;        &lt;ColorBox /&gt;      &lt;/div&gt;    &lt;/ColorContext.Provider&gt;  );&#125;export default App;\n\nProvider를 사용할 때는 value 값을 명시해 주어야 제대로 작동한다.\n\n동적 ContextContext의 value에는 무조건 상태 값만 있어야 하는 것은 아니다. 함수를 전달해 줄 수도 있다.\n12345678910111213141516171819202122232425262728293031import React, &#123; createContext, useState &#125; from \"react\";const ColorContext = createContext(&#123;  state: &#123; color: \"black\", subcolor: \"red\" &#125;,  actions: &#123;    setColor: () =&gt; &#123;&#125;,    setSubcolor: () =&gt; &#123;&#125;  &#125;&#125;);const ColorProvider = (&#123; children &#125;) =&gt; &#123;  const [color, setColor] = useState(\"black\");  const [subcolor, setSubcolor] = useState(\"red\");  const value = &#123;    state: &#123; color, subcolor &#125;,    actions: &#123; setColor, setSubcolor &#125;  &#125;;  return (    &lt;ColorContext.Provider value=&#123;value&#125;&gt;&#123;children&#125;&lt;/ColorContext.Provider&gt;  );&#125;;// const ColorConsumer = ColorContext.Consumer와 같은 의미const &#123; Consumer: ColorConsumer &#125; = ColorContext;// ColorProvider와 ColorConsumer 내보내기export &#123; ColorProvider, ColorConsumer &#125;;export default ColorContext;\n\nColorProvider 컴포넌트에서는 ColorContext.Provider를 렌더링하고 있다. 이 Provider의 value에는 상태는 state로, 업데이트 함수는 actions로 묶어서 전달하고 있다. Context에서 값을 동적으로 사용할 때 반드시 묶어줄 필요는 없지만, 이렇게 state와 actions 객체를 따로따로 분리해 주면 나중에 다른 컴포넌트에서 Context의 값을 사용할 때 편리하다.\ncreateContext를 사용할 때 기본값은 실제 Provider의 value에 넣는 객체의 형태와 일치시켜 주는 것이 좋다. 그렇게 하면 Context 코드를 볼 때 내부 값이 어떻게 구성되어 있는지 파악하기도 쉽고, 실수로 Provider를 사용하지 않았을 때 리액트 애플리케이션에서 에러가 발생하지 않는다.\n123456789101112131415import React from \"react\";import ColorBox from \"./components/ColorBox\";import &#123; ColorProvider &#125; from \"./contexts/color\";function App() &#123;  return (    &lt;ColorProvider&gt;      &lt;div&gt;        &lt;ColorBox /&gt;      &lt;/div&gt;    &lt;/ColorProvider&gt;  );&#125;export default App;\n\n1234567891011121314151617181920212223242526272829import React from \"react\";import &#123; ColorConsumer &#125; from \"../contexts/color\";const ColorBox = () =&gt; &#123;  return (    &lt;ColorConsumer&gt;      &#123;value =&gt; (        &lt;&gt;          &lt;div            style=&#123;&#123;              width: \"64px\",              height: \"64px\",              backgroundColor: value.state.color            &#125;&#125;          /&gt;          &lt;div            style=&#123;&#123;              width: \"32px\",              height: \"32px\",              backgroundColor: value.state.subcolor            &#125;&#125;          /&gt;        &lt;/&gt;      )&#125;    &lt;/ColorConsumer&gt;  );&#125;;export default ColorBox;\n\n비구조화 할당 문법(디스트럭쳐링)을 사용하면 다음과 같이 value 조회하는 것을 생략할 수도 있다.\n1234567891011121314151617181920212223242526272829import React from \"react\";import &#123; ColorConsumer &#125; from \"../contexts/color\";const ColorBox = () =&gt; &#123;  return (    &lt;ColorConsumer&gt;      &#123;(&#123; state &#125;) =&gt; (        &lt;&gt;          &lt;div            style=&#123;&#123;              width: \"64px\",              height: \"64px\",              backgroundColor: state.color            &#125;&#125;          /&gt;          &lt;div            style=&#123;&#123;              width: \"32px\",              height: \"32px\",              backgroundColor: state.subcolor            &#125;&#125;          /&gt;        &lt;/&gt;      )&#125;    &lt;/ColorConsumer&gt;  );&#125;;export default ColorBox;\n\n이번에는 Context의 actions에 넣어 준 함수를 호출하는 컴포넌트를 만들어 준다.\n123456789101112131415161718192021222324252627import React from \"react\";const colors = [\"red\", \"orange\", \"yellow\", \"green\", \"blue\", \"indigo\", \"violet\"];const SelectColors = () =&gt; &#123;  return (    &lt;div&gt;      &lt;h2&gt;색상을 선택하세요&lt;/h2&gt;      &lt;div style=&#123;&#123; display: \"flex\" &#125;&#125;&gt;        &#123;colors.map(color =&gt; (          &lt;div            key=&#123;color&#125;            style=&#123;&#123;              backgroundColor: color,              width: \"24px\",              height: \"24px\",              cursor: \"pointer\"            &#125;&#125;          /&gt;        ))&#125;      &lt;/div&gt;      &lt;hr /&gt;    &lt;/div&gt;  );&#125;;export default SelectColors;\n\n만들어 준 컴포넌트를 App 컴포넌트에 렌더링 한다.\n1234567891011121314151617import React from \"react\";import ColorBox from \"./components/ColorBox\";import &#123; ColorProvider &#125; from \"./contexts/color\";import SelectColors from \"./components/SelectColors\";function App() &#123;  return (    &lt;ColorProvider&gt;      &lt;div&gt;        &lt;SelectColors /&gt;        &lt;ColorBox /&gt;      &lt;/div&gt;    &lt;/ColorProvider&gt;  );&#125;export default App;\n\n위에서 새로 만들어 준 컴포넌트에서 색상을 선택하면 변경되도록 Context의 actions를 불러오면 아래와 같이 구현된다.\n12345678910111213141516171819202122232425262728293031323334353637import React from \"react\";import &#123; ColorConsumer &#125; from \"../contexts/color\";const colors = [\"red\", \"orange\", \"yellow\", \"green\", \"blue\", \"indigo\", \"violet\"];const SelectColors = () =&gt; &#123;  return (    &lt;div&gt;      &lt;h2&gt;색상을 선택하세요&lt;/h2&gt;      &lt;ColorConsumer&gt;        &#123;(&#123; actions &#125;) =&gt; (          &lt;div style=&#123;&#123; display: \"flex\" &#125;&#125;&gt;            &#123;colors.map(color =&gt; (              &lt;div                key=&#123;color&#125;                style=&#123;&#123;                  backgroundColor: color,                  width: \"24px\",                  height: \"24px\",                  cursor: \"pointer\"                &#125;&#125;                onClick=&#123;() =&gt; actions.setColor(color)&#125;                onContextMenu=&#123;e =&gt; &#123;                  e.preventDefault(); // 마우스 오른쪽 버튼 클릭 시 메뉴가 뜨는 것을 무시함                  actions.setSubcolor(color);                &#125;&#125;              /&gt;            ))&#125;          &lt;/div&gt;        )&#125;      &lt;/ColorConsumer&gt;      &lt;hr /&gt;    &lt;/div&gt;  );&#125;;export default SelectColors;\n\n\nConsumer 대신 Hook 또는 static contextType 사용1. useContext (함수형 컴포넌트)리액트에 내장되어 있는 Hooks 중에서 useContext라는 Hook을 사용하면, 함수형 컴포넌트에서 Context를 아주 편하게 사용할 수 있다.\n1234567891011121314151617181920212223242526import React, &#123; useContext &#125; from &quot;react&quot;;import ColorContext from &quot;../contexts/color&quot;;const ColorBox = () =&gt; &#123;  const &#123; state &#125; = useContext(ColorContext);  return (    &lt;&gt;      &lt;div        style=&#123;&#123;          width: &quot;64px&quot;,          height: &quot;64px&quot;,          backgroundColor: state.color        &#125;&#125;      /&gt;      &lt;div        style=&#123;&#123;          width: &quot;32px&quot;,          height: &quot;32px&quot;,          backgroundColor: state.subcolor        &#125;&#125;      /&gt;    &lt;/&gt;  );&#125;;export default ColorBox;\n\n이전보다 훨씬 간결해졌다. 만약 children에 함수를 전달하는 Render Props 패턴이 불편하다면, useContext Hook을 사용하여 훨씬 편하게 Context 값을 조회할 수 있다.\n단, Hook은 함수형 컴포넌트에서만 사용할 수 있다는 것에 주의해야 한다.\n2. static contextType (클래스형 컴포넌트)클래스형 컴포넌트에서 Context를 좀 더 쉽게 사용하고 싶다면 static contextType을 정의하는 방법이 있다.\n123456789101112131415161718192021222324252627282930313233343536373839404142434445import React, &#123; Component &#125; from &quot;react&quot;;import ColorContext from &quot;../contexts/color&quot;;const colors = [&quot;red&quot;, &quot;orange&quot;, &quot;yellow&quot;, &quot;green&quot;, &quot;blue&quot;, &quot;indigo&quot;, &quot;violet&quot;];class SelectColors extends Component &#123;  static contextType = ColorContext;  handleSetColor = color =&gt; &#123;    this.context.actions.setColor(color);  &#125;;  handleSetSubcolor = subcolor =&gt; &#123;    this.context.actions.setSubcolor(subcolor);  &#125;;  render() &#123;    return (      &lt;div&gt;        &lt;h2&gt;색상을 선택하세요.&lt;/h2&gt;        &lt;div style=&#123;&#123; display: &quot;flex&quot; &#125;&#125;&gt;          &#123;colors.map(color =&gt; (            &lt;div              key=&#123;color&#125;              style=&#123;&#123;                backgroundColor: color,                width: &quot;24px&quot;,                height: &quot;24px&quot;,                cursor: &quot;pointer&quot;              &#125;&#125;              onClick=&#123;() =&gt; this.handleSetColor(color)&#125;              onContextMenu=&#123;e =&gt; &#123;                e.preventDefault();                this.handleSetSubcolor(color);              &#125;&#125;            /&gt;          ))&#125;        &lt;/div&gt;        &lt;hr /&gt;      &lt;/div&gt;    );  &#125;&#125;export default SelectColors;\n\nstatic contextType을 정의하면 클래스 메서드에서도 Context에 넣어 둔 함수를 호출할 수 있다는 장점이 있다. 단점은, 한 클래스에서 하나의 Context밖에 사용하지 못한다는 것이다.앞으로 클래스형 컴포넌트로 작성하는 일은 많지 않기 때문에 useContext를 사용하는 것을 권한다.\n\n단순한 전역 상태 관리라면 Context API로 리덕스를 대체할 수도 있다.그러나, 리덕스는 더욱 향상된 성능과 미들웨어 기능, 강력한 개발자 도구, 코드의 높은 유지 보수성을 제공하기 때문에 모든 상황에 대해 대체가 가능하지는 않다.\n\n참고: 리액트를 다루는 기술 개정판 (저자: velopert 김민준)\n","dateCreated":"2019-11-12T08:23:55+09:00","dateModified":"2019-11-12T09:33:07+09:00","datePublished":"2019-11-12T08:23:55+09:00","description":"Context API는 리액트 프로젝트에서 전역적으로 사용할 데이터가 있을 때 유용한 기능이다. Context API는 리액트 v16.3부터 사용하기 쉽게 많이 개선되었다. 이 기능은 리액트 관련 라이브러리에서도 많이 사용되고 있다.\n\n리덕스, 리액트 라우터, styled-components 등의 라이브러리는 Context API를 기반으로 구현되어 있다.\n","headline":"React 기초다지기-(5) Context API ","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/","keywords":"React, Context API"}</script>
+    <meta name="description" content="Context API는 리액트 프로젝트에서 전역적으로 사용할 데이터가 있을 때 유용한 기능이다. Context API는 리액트 v16.3부터 사용하기 쉽게 많이 개선되었다. 이 기능은 리액트 관련 라이브러리에서도 많이 사용되고 있다.  리덕스, 리액트 라우터, styled-components 등의 라이브러리는 Context API를 기반으로 구현되어 있다.">
+<meta name="keywords" content="React,Context API">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="React 기초다지기-(5) Context API ">
+<meta property="og:url" content="https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/index.html">
+<meta property="og:site_name" content="공부방">
+<meta property="og:description" content="Context API는 리액트 프로젝트에서 전역적으로 사용할 데이터가 있을 때 유용한 기능이다. Context API는 리액트 v16.3부터 사용하기 쉽게 많이 개선되었다. 이 기능은 리액트 관련 라이브러리에서도 많이 사용되고 있다.  리덕스, 리액트 라우터, styled-components 등의 라이브러리는 Context API를 기반으로 구현되어 있다.">
+<meta property="og:locale" content="ko">
+<meta property="og:updated_time" content="2019-11-12T00:33:07.197Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="React 기초다지기-(5) Context API ">
+<meta name="twitter:description" content="Context API는 리액트 프로젝트에서 전역적으로 사용할 데이터가 있을 때 유용한 기능이다. Context API는 리액트 v16.3부터 사용하기 쉽게 많이 개선되었다. 이 기능은 리액트 관련 라이브러리에서도 많이 사용되고 있다.  리덕스, 리액트 라우터, styled-components 등의 라이브러리는 Context API를 기반으로 구현되어 있다.">
+    
+    
+        
+    
+    
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/cat.jpeg"/>
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/all.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            공부방
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+            <img class="header-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="저자에 대해 더 알아보기"
+                >
+                    <img class="sidebar-profile-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+                </a>
+                <h4 class="sidebar-profile-name">dajyu</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="About"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/cok2exe" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://stackoverflow.com/cok2exe" target="_blank" rel="noopener" title="Stack Overflow">
+                    
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            React 기초다지기-(5) Context API 
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-11-12T08:23:55+09:00">
+	
+		    2019/11/12
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/React/">React</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>Context API는 리액트 프로젝트에서 전역적으로 사용할 데이터가 있을 때 유용한 기능이다. Context API는 리액트 v16.3부터 사용하기 쉽게 많이 개선되었다. 이 기능은 리액트 관련 라이브러리에서도 많이 사용되고 있다.</p>
+<blockquote>
+<p>리덕스, 리액트 라우터, styled-components 등의 라이브러리는 Context API를 기반으로 구현되어 있다.</p>
+</blockquote>
+<a id="more"></a>
+
+<h3 id="Context-API를-사용한-전역-상태-관리-흐름"><a href="#Context-API를-사용한-전역-상태-관리-흐름" class="headerlink" title="Context API를 사용한 전역 상태 관리 흐름"></a>Context API를 사용한 전역 상태 관리 흐름</h3><p>리액트는 컴포넌트 간에 데이터를 props로 전달하기 때문에 컴포넌트 여기저기서 필요한 데이터가 있을 때는 주로 최상위 컴포넌트인 App의 state에 넣어서 관리한다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">        [App]</span><br><span class="line">      /       \</span><br><span class="line">     (A)      (H)</span><br><span class="line">    /   \      | \</span><br><span class="line">   (B)  (C)   (I)(J)</span><br><span class="line">  / | \</span><br><span class="line">(D)(E)(F)</span><br><span class="line">    |</span><br><span class="line">   (G)</span><br></pre></td></tr></table></figure>
+
+<p>G 컴포넌트는 전역 상태를 업데이트시키고, F와 J 컴포넌트는 업데이트된 상태를 렌더링한다. 그렇다면 App 컴포넌트에서는 당므과 같이 상태와 업데이트 함수를 정의해야 한다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> [value, setValue] = useState(<span class="string">"hello"</span>);</span><br><span class="line"><span class="keyword">const</span> onSetValue = useCallback(<span class="function"><span class="params">value</span> =&gt;</span> setValue(value), []);</span><br></pre></td></tr></table></figure>
+
+<p>그리고 App이 지니고 있는 value 값을 F 컴포넌트와 J 컴포넌트에 전달하려면 여러 컴포넌트를 거쳐야 한다. F의 경우 App -&gt; A -&gt; B -&gt; F의 흐름이고, J의 경우 App -&gt; A -&gt; B -&gt; J의 흐름이다. 추가로 G 컴포넌트에 상태 업데이트 함수를 전달할 때도 App -&gt; A -&gt; B -&gt; E -&gt; G와 같이 복잡하게 여러 번 거쳐서 전달해야 한다.</p>
+<p>실제 리액트 프로젝트에서는 더 많은 컴포넌트를 거쳐야 할 때도 있고, 다루어야 하는 데이터가 훨씬 많아질 수도 있으므로, 이런 방식을 사용하면 유지 보수성이 낮아질 가능성이 있다.</p>
+<p>이로 인해 리덕스나 MobX 같은 상태 관리 라이브러리를 사용하여 전역 상태 관리 작업을 편하게 처리하기도 한다. 리액트 v16.3 업데이트 이후 Context API가 많이 개선되었기에 별도의 라이브러리 사용없이 전역 상태 관리가 쉬워졌다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">        [App]</span><br><span class="line">      /       \</span><br><span class="line">     (A)      (H)</span><br><span class="line">    /   \      | \</span><br><span class="line">   (B)  (C)   (I)(J)</span><br><span class="line">  / | \           |</span><br><span class="line">(D)(E)(F)         |</span><br><span class="line">    |     \       |</span><br><span class="line">   (G)  ㅡ   Context</span><br></pre></td></tr></table></figure>
+
+<p>위와 같이 기존에는 상위 컴포넌트에서 여러 컴포넌트를 거쳐 props로 원하는 값을 전달했지만, Context API를 사용하면 Context를 만들어 단 한번에 원하는 값을 받아와서 사용할 수 있다.</p>
+<hr>
+<h3 id="Context-API-사용법"><a href="#Context-API-사용법" class="headerlink" title="Context API 사용법"></a>Context API 사용법</h3><p>새 Context를 만들 때는 <code>createContext</code> 함수를 사용한다. 파라미터에는 해당 Context의 기본 상태를 지정한다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; createContext &#125; <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ColorContext = createContext(&#123; <span class="attr">color</span>: <span class="string">"black"</span> &#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> ColorContext;</span><br></pre></td></tr></table></figure>
+
+<p>ColorBox 라는 컴포넌트를 만들어서 색상을 보여주는데, 이때 색상을 props로 받아 오는 것이 아니라 ColorContext 안에 들어 있는 Consumer라는 컴포넌트를 통해 색상을 조회할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> ColorContext <span class="keyword">from</span> <span class="string">"../contexts/color"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ColorBox = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorContext.Consumer&gt;</span><br><span class="line">      &#123;value =&gt; (</span><br><span class="line">        &lt;div</span><br><span class="line">          style=&#123;&#123;</span><br><span class="line">            width: <span class="string">"64px"</span>,</span><br><span class="line">            height: <span class="string">"64px"</span>,</span><br><span class="line">            backgroundColor: value.color</span><br><span class="line">          &#125;&#125;</span><br><span class="line">        /&gt;</span><br><span class="line">      )&#125;</span><br><span class="line">    &lt;<span class="regexp">/ColorContext.Consumer&gt;</span></span><br><span class="line"><span class="regexp">  );</span></span><br><span class="line"><span class="regexp">&#125;;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">export default ColorBox;</span></span><br></pre></td></tr></table></figure>
+
+<p>Consumer 사이에 중괄호를 열어서 그 안에 함수를 넣어 준다. 이러한 패턴을 <code>Function as a child</code>, 혹은 <code>Render Props</code>라고 한다. 컴포넌트의 children이 있어야 할 자리에 일반 JSX 혹은 문자열이 아닌 함수를 전달하는 것이다.</p>
+<p>Provider를 사용하면 Context의 value를 변경할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> ColorBox <span class="keyword">from</span> <span class="string">"./components/ColorBox"</span>;</span><br><span class="line"><span class="keyword">import</span> ColorContext <span class="keyword">from</span> <span class="string">"./contexts/color"</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">App</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorContext.Provider value=&#123;&#123; <span class="attr">color</span>: <span class="string">"red"</span> &#125;&#125;&gt;</span><br><span class="line">      &lt;div&gt;</span><br><span class="line">        &lt;ColorBox /&gt;</span><br><span class="line">      &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">    &lt;/</span>ColorContext.Provider&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> App;</span><br></pre></td></tr></table></figure>
+
+<p>기존에 createContext 함수를 사용할 때는 파라미터로 Context의 기본값을 넣어 주었는데, 이 기본값은 Provider를 사용하지 않았을 때만 사용된다. 만약 Provider를 사용했는데 value를 명시하지 않았다면, 이 기본값을 사용하지 않기 때문에 오류가 발생한다.</p>
+<p>다음의 코드는 오류가 발생하는 코드이다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> ColorBox <span class="keyword">from</span> <span class="string">"./components/ColorBox"</span>;</span><br><span class="line"><span class="keyword">import</span> ColorContext <span class="keyword">from</span> <span class="string">"./contexts/color"</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">App</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorContext.Provider&gt;</span><br><span class="line">      &lt;div&gt;</span><br><span class="line">        &lt;ColorBox /&gt;</span><br><span class="line">      &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">    &lt;/</span>ColorContext.Provider&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> App;</span><br></pre></td></tr></table></figure>
+
+<p>Provider를 사용할 때는 value 값을 명시해 주어야 제대로 작동한다.</p>
+<hr>
+<h3 id="동적-Context"><a href="#동적-Context" class="headerlink" title="동적 Context"></a>동적 Context</h3><p>Context의 value에는 무조건 상태 값만 있어야 하는 것은 아니다. 함수를 전달해 줄 수도 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; createContext, useState &#125; <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ColorContext = createContext(&#123;</span><br><span class="line">  state: &#123; <span class="attr">color</span>: <span class="string">"black"</span>, <span class="attr">subcolor</span>: <span class="string">"red"</span> &#125;,</span><br><span class="line">  actions: &#123;</span><br><span class="line">    setColor: <span class="function"><span class="params">()</span> =&gt;</span> &#123;&#125;,</span><br><span class="line">    setSubcolor: <span class="function"><span class="params">()</span> =&gt;</span> &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ColorProvider = <span class="function">(<span class="params">&#123; children &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> [color, setColor] = useState(<span class="string">"black"</span>);</span><br><span class="line">  <span class="keyword">const</span> [subcolor, setSubcolor] = useState(<span class="string">"red"</span>);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> value = &#123;</span><br><span class="line">    state: &#123; color, subcolor &#125;,</span><br><span class="line">    actions: &#123; setColor, setSubcolor &#125;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorContext.Provider value=&#123;value&#125;&gt;&#123;children&#125;&lt;<span class="regexp">/ColorContext.Provider&gt;</span></span><br><span class="line"><span class="regexp">  );</span></span><br><span class="line"><span class="regexp">&#125;;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">/</span><span class="regexp">/ const ColorConsumer = ColorContext.Consumer와 같은 의미</span></span><br><span class="line"><span class="regexp">const &#123; Consumer: ColorConsumer &#125; = ColorContext;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">/</span><span class="regexp">/ ColorProvider와 ColorConsumer 내보내기</span></span><br><span class="line"><span class="regexp">export &#123; ColorProvider, ColorConsumer &#125;;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">export default ColorContext;</span></span><br></pre></td></tr></table></figure>
+
+<p>ColorProvider 컴포넌트에서는 ColorContext.Provider를 렌더링하고 있다. 이 Provider의 value에는 상태는 state로, 업데이트 함수는 actions로 묶어서 전달하고 있다. Context에서 값을 동적으로 사용할 때 반드시 묶어줄 필요는 없지만, 이렇게 state와 actions 객체를 따로따로 분리해 주면 나중에 다른 컴포넌트에서 Context의 값을 사용할 때 편리하다.</p>
+<p>createContext를 사용할 때 기본값은 실제 Provider의 value에 넣는 객체의 형태와 일치시켜 주는 것이 좋다. 그렇게 하면 Context 코드를 볼 때 내부 값이 어떻게 구성되어 있는지 파악하기도 쉽고, 실수로 Provider를 사용하지 않았을 때 리액트 애플리케이션에서 에러가 발생하지 않는다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> ColorBox <span class="keyword">from</span> <span class="string">"./components/ColorBox"</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; ColorProvider &#125; <span class="keyword">from</span> <span class="string">"./contexts/color"</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">App</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorProvider&gt;</span><br><span class="line">      &lt;div&gt;</span><br><span class="line">        &lt;ColorBox /&gt;</span><br><span class="line">      &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">    &lt;/</span>ColorProvider&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> App;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; ColorConsumer &#125; <span class="keyword">from</span> <span class="string">"../contexts/color"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ColorBox = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorConsumer&gt;</span><br><span class="line">      &#123;value =&gt; (</span><br><span class="line">        &lt;&gt;</span><br><span class="line">          &lt;div</span><br><span class="line">            style=&#123;&#123;</span><br><span class="line">              width: <span class="string">"64px"</span>,</span><br><span class="line">              height: <span class="string">"64px"</span>,</span><br><span class="line">              backgroundColor: value.state.color</span><br><span class="line">            &#125;&#125;</span><br><span class="line">          /&gt;</span><br><span class="line">          &lt;div</span><br><span class="line">            style=&#123;&#123;</span><br><span class="line">              width: <span class="string">"32px"</span>,</span><br><span class="line">              height: <span class="string">"32px"</span>,</span><br><span class="line">              backgroundColor: value.state.subcolor</span><br><span class="line">            &#125;&#125;</span><br><span class="line">          /&gt;</span><br><span class="line">        &lt;<span class="regexp">/&gt;</span></span><br><span class="line"><span class="regexp">      )&#125;</span></span><br><span class="line"><span class="regexp">    &lt;/</span>ColorConsumer&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> ColorBox;</span><br></pre></td></tr></table></figure>
+
+<p>비구조화 할당 문법(디스트럭쳐링)을 사용하면 다음과 같이 value 조회하는 것을 생략할 수도 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; ColorConsumer &#125; <span class="keyword">from</span> <span class="string">"../contexts/color"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ColorBox = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorConsumer&gt;</span><br><span class="line">      &#123;(&#123; state &#125;) =&gt; (</span><br><span class="line">        &lt;&gt;</span><br><span class="line">          &lt;div</span><br><span class="line">            style=&#123;&#123;</span><br><span class="line">              width: <span class="string">"64px"</span>,</span><br><span class="line">              height: <span class="string">"64px"</span>,</span><br><span class="line">              backgroundColor: state.color</span><br><span class="line">            &#125;&#125;</span><br><span class="line">          /&gt;</span><br><span class="line">          &lt;div</span><br><span class="line">            style=&#123;&#123;</span><br><span class="line">              width: <span class="string">"32px"</span>,</span><br><span class="line">              height: <span class="string">"32px"</span>,</span><br><span class="line">              backgroundColor: state.subcolor</span><br><span class="line">            &#125;&#125;</span><br><span class="line">          /&gt;</span><br><span class="line">        &lt;<span class="regexp">/&gt;</span></span><br><span class="line"><span class="regexp">      )&#125;</span></span><br><span class="line"><span class="regexp">    &lt;/</span>ColorConsumer&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> ColorBox;</span><br></pre></td></tr></table></figure>
+
+<p>이번에는 Context의 actions에 넣어 준 함수를 호출하는 컴포넌트를 만들어 준다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> colors = [<span class="string">"red"</span>, <span class="string">"orange"</span>, <span class="string">"yellow"</span>, <span class="string">"green"</span>, <span class="string">"blue"</span>, <span class="string">"indigo"</span>, <span class="string">"violet"</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> SelectColors = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;div&gt;</span><br><span class="line">      &lt;h2&gt;색상을 선택하세요&lt;<span class="regexp">/h2&gt;</span></span><br><span class="line"><span class="regexp">      &lt;div style=&#123;&#123; display: "flex" &#125;&#125;&gt;</span></span><br><span class="line"><span class="regexp">        &#123;colors.map(color =&gt; (</span></span><br><span class="line"><span class="regexp">          &lt;div</span></span><br><span class="line"><span class="regexp">            key=&#123;color&#125;</span></span><br><span class="line"><span class="regexp">            style=&#123;&#123;</span></span><br><span class="line"><span class="regexp">              backgroundColor: color,</span></span><br><span class="line"><span class="regexp">              width: "24px",</span></span><br><span class="line"><span class="regexp">              height: "24px",</span></span><br><span class="line"><span class="regexp">              cursor: "pointer"</span></span><br><span class="line"><span class="regexp">            &#125;&#125;</span></span><br><span class="line"><span class="regexp">          /</span>&gt;</span><br><span class="line">        ))&#125;</span><br><span class="line">      &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">      &lt;hr /</span>&gt;</span><br><span class="line">    &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">  );</span></span><br><span class="line"><span class="regexp">&#125;;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">export default SelectColors;</span></span><br></pre></td></tr></table></figure>
+
+<p>만들어 준 컴포넌트를 App 컴포넌트에 렌더링 한다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> ColorBox <span class="keyword">from</span> <span class="string">"./components/ColorBox"</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; ColorProvider &#125; <span class="keyword">from</span> <span class="string">"./contexts/color"</span>;</span><br><span class="line"><span class="keyword">import</span> SelectColors <span class="keyword">from</span> <span class="string">"./components/SelectColors"</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">App</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;ColorProvider&gt;</span><br><span class="line">      &lt;div&gt;</span><br><span class="line">        &lt;SelectColors /&gt;</span><br><span class="line">        &lt;ColorBox /&gt;</span><br><span class="line">      &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">    &lt;/</span>ColorProvider&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> App;</span><br></pre></td></tr></table></figure>
+
+<p>위에서 새로 만들어 준 컴포넌트에서 색상을 선택하면 변경되도록 Context의 actions를 불러오면 아래와 같이 구현된다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">"react"</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; ColorConsumer &#125; <span class="keyword">from</span> <span class="string">"../contexts/color"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> colors = [<span class="string">"red"</span>, <span class="string">"orange"</span>, <span class="string">"yellow"</span>, <span class="string">"green"</span>, <span class="string">"blue"</span>, <span class="string">"indigo"</span>, <span class="string">"violet"</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> SelectColors = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    &lt;div&gt;</span><br><span class="line">      &lt;h2&gt;색상을 선택하세요&lt;<span class="regexp">/h2&gt;</span></span><br><span class="line"><span class="regexp">      &lt;ColorConsumer&gt;</span></span><br><span class="line"><span class="regexp">        &#123;(&#123; actions &#125;) =&gt; (</span></span><br><span class="line"><span class="regexp">          &lt;div style=&#123;&#123; display: "flex" &#125;&#125;&gt;</span></span><br><span class="line"><span class="regexp">            &#123;colors.map(color =&gt; (</span></span><br><span class="line"><span class="regexp">              &lt;div</span></span><br><span class="line"><span class="regexp">                key=&#123;color&#125;</span></span><br><span class="line"><span class="regexp">                style=&#123;&#123;</span></span><br><span class="line"><span class="regexp">                  backgroundColor: color,</span></span><br><span class="line"><span class="regexp">                  width: "24px",</span></span><br><span class="line"><span class="regexp">                  height: "24px",</span></span><br><span class="line"><span class="regexp">                  cursor: "pointer"</span></span><br><span class="line"><span class="regexp">                &#125;&#125;</span></span><br><span class="line"><span class="regexp">                onClick=&#123;() =&gt; actions.setColor(color)&#125;</span></span><br><span class="line"><span class="regexp">                onContextMenu=&#123;e =&gt; &#123;</span></span><br><span class="line"><span class="regexp">                  e.preventDefault(); /</span><span class="regexp">/ 마우스 오른쪽 버튼 클릭 시 메뉴가 뜨는 것을 무시함</span></span><br><span class="line"><span class="regexp">                  actions.setSubcolor(color);</span></span><br><span class="line"><span class="regexp">                &#125;&#125;</span></span><br><span class="line"><span class="regexp">              /</span>&gt;</span><br><span class="line">            ))&#125;</span><br><span class="line">          &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">        )&#125;</span></span><br><span class="line"><span class="regexp">      &lt;/</span>ColorConsumer&gt;</span><br><span class="line">      &lt;hr /&gt;</span><br><span class="line">    &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">  );</span></span><br><span class="line"><span class="regexp">&#125;;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">export default SelectColors;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="Consumer-대신-Hook-또는-static-contextType-사용"><a href="#Consumer-대신-Hook-또는-static-contextType-사용" class="headerlink" title="Consumer 대신 Hook 또는 static contextType 사용"></a>Consumer 대신 Hook 또는 static contextType 사용</h3><h4 id="1-useContext-함수형-컴포넌트"><a href="#1-useContext-함수형-컴포넌트" class="headerlink" title="1. useContext (함수형 컴포넌트)"></a>1. useContext (함수형 컴포넌트)</h4><p>리액트에 내장되어 있는 Hooks 중에서 <code>useContext</code>라는 Hook을 사용하면, 함수형 컴포넌트에서 Context를 아주 편하게 사용할 수 있다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">import React, &#123; useContext &#125; from &quot;react&quot;;</span><br><span class="line">import ColorContext from &quot;../contexts/color&quot;;</span><br><span class="line"></span><br><span class="line">const ColorBox = () =&gt; &#123;</span><br><span class="line">  const &#123; state &#125; = useContext(ColorContext);</span><br><span class="line">  return (</span><br><span class="line">    &lt;&gt;</span><br><span class="line">      &lt;div</span><br><span class="line">        style=&#123;&#123;</span><br><span class="line">          width: &quot;64px&quot;,</span><br><span class="line">          height: &quot;64px&quot;,</span><br><span class="line">          backgroundColor: state.color</span><br><span class="line">        &#125;&#125;</span><br><span class="line">      /&gt;</span><br><span class="line">      &lt;div</span><br><span class="line">        style=&#123;&#123;</span><br><span class="line">          width: &quot;32px&quot;,</span><br><span class="line">          height: &quot;32px&quot;,</span><br><span class="line">          backgroundColor: state.subcolor</span><br><span class="line">        &#125;&#125;</span><br><span class="line">      /&gt;</span><br><span class="line">    &lt;/&gt;</span><br><span class="line">  );</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">export default ColorBox;</span><br></pre></td></tr></table></figure>
+
+<p>이전보다 훨씬 간결해졌다. 만약 children에 함수를 전달하는 Render Props 패턴이 불편하다면, useContext Hook을 사용하여 훨씬 편하게 Context 값을 조회할 수 있다.</p>
+<p>단, Hook은 함수형 컴포넌트에서만 사용할 수 있다는 것에 주의해야 한다.</p>
+<h4 id="2-static-contextType-클래스형-컴포넌트"><a href="#2-static-contextType-클래스형-컴포넌트" class="headerlink" title="2. static contextType (클래스형 컴포넌트)"></a>2. static contextType (클래스형 컴포넌트)</h4><p>클래스형 컴포넌트에서 Context를 좀 더 쉽게 사용하고 싶다면 <code>static contextType</code>을 정의하는 방법이 있다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">import React, &#123; Component &#125; from &quot;react&quot;;</span><br><span class="line">import ColorContext from &quot;../contexts/color&quot;;</span><br><span class="line"></span><br><span class="line">const colors = [&quot;red&quot;, &quot;orange&quot;, &quot;yellow&quot;, &quot;green&quot;, &quot;blue&quot;, &quot;indigo&quot;, &quot;violet&quot;];</span><br><span class="line"></span><br><span class="line">class SelectColors extends Component &#123;</span><br><span class="line">  static contextType = ColorContext;</span><br><span class="line"></span><br><span class="line">  handleSetColor = color =&gt; &#123;</span><br><span class="line">    this.context.actions.setColor(color);</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  handleSetSubcolor = subcolor =&gt; &#123;</span><br><span class="line">    this.context.actions.setSubcolor(subcolor);</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  render() &#123;</span><br><span class="line">    return (</span><br><span class="line">      &lt;div&gt;</span><br><span class="line">        &lt;h2&gt;색상을 선택하세요.&lt;/h2&gt;</span><br><span class="line">        &lt;div style=&#123;&#123; display: &quot;flex&quot; &#125;&#125;&gt;</span><br><span class="line">          &#123;colors.map(color =&gt; (</span><br><span class="line">            &lt;div</span><br><span class="line">              key=&#123;color&#125;</span><br><span class="line">              style=&#123;&#123;</span><br><span class="line">                backgroundColor: color,</span><br><span class="line">                width: &quot;24px&quot;,</span><br><span class="line">                height: &quot;24px&quot;,</span><br><span class="line">                cursor: &quot;pointer&quot;</span><br><span class="line">              &#125;&#125;</span><br><span class="line">              onClick=&#123;() =&gt; this.handleSetColor(color)&#125;</span><br><span class="line">              onContextMenu=&#123;e =&gt; &#123;</span><br><span class="line">                e.preventDefault();</span><br><span class="line">                this.handleSetSubcolor(color);</span><br><span class="line">              &#125;&#125;</span><br><span class="line">            /&gt;</span><br><span class="line">          ))&#125;</span><br><span class="line">        &lt;/div&gt;</span><br><span class="line">        &lt;hr /&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">export default SelectColors;</span><br></pre></td></tr></table></figure>
+
+<p>static contextType을 정의하면 클래스 메서드에서도 Context에 넣어 둔 함수를 호출할 수 있다는 장점이 있다. 단점은, 한 클래스에서 하나의 Context밖에 사용하지 못한다는 것이다.<br>앞으로 클래스형 컴포넌트로 작성하는 일은 많지 않기 때문에 <code>useContext</code>를 사용하는 것을 권한다.</p>
+<blockquote>
+<p>단순한 전역 상태 관리라면 Context API로 리덕스를 대체할 수도 있다.<br>그러나, 리덕스는 더욱 향상된 성능과 미들웨어 기능, 강력한 개발자 도구, 코드의 높은 유지 보수성을 제공하기 때문에 모든 상황에 대해 대체가 가능하지는 않다.</p>
+</blockquote>
+<p>참고: <a href="http://www.yes24.com/Product/Goods/78233628?scode=032&OzSrank=1" target="_blank" rel="noopener">리액트를 다루는 기술 개정판 (저자: velopert 김민준)</a></p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/Context-API/">Context API</a> <a class="tag tag--primary tag--small t-link" href="/tags/React/">React</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/11/번외-리덕스-미들웨어/"
+                    data-tooltip="(번외) 리덕스 미들웨어"
+                    aria-label="다음: (번외) 리덕스 미들웨어"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2019 dajyu. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/11/번외-리덕스-미들웨어/"
+                    data-tooltip="(번외) 리덕스 미들웨어"
+                    aria-label="다음: (번외) 리덕스 미들웨어"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/12/React-기초다지기-5-Context-API/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+            <h4 id="about-card-name">dajyu</h4>
+        
+            <div id="about-card-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Web frontend</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Asia/Seoul
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
