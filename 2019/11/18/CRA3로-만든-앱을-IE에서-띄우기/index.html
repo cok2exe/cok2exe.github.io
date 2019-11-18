@@ -1,0 +1,563 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="공부방">
+    <title>CRA3로 만든 앱을 IE에서 띄우기 - 공부방</title>
+    <meta name="author" content="dajyu">
+    
+        <meta name="keywords" content="React,Typescript,HTML,CSS,Frontend,">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"\nIE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.\n\nCRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원을 필요로 하고 있다. 따라서, 최신 CRA로 만들어진 React App을 IE에서 동작하게 하려면 react-app-polyfill 을 사용해야 한다.\n\n\n1$ yarn add react-app-polyfill\n\nreact-app-polyfill을 설치했다면, 가장 최상위 index.js인 /src/index.js에 아래 스크립트를 추가하면 된다.\n12import &apos;react-app-polyfill/ie9&apos; // for IE9 +import &apos;react-app-polyfill/ie11&apos; // for IE11\n\n\n위의 말한 스크립트를 추가해줬는데도, yarn start를 하면 IE에서는 빈 페이지만 뜬다. 왜 그럴까?IE같이 최신 코드의 지원이 잘 되지 않는 브라우저(멍청한 브라우저)를 위해 최신 코드도 사용할 수 있도록 지원해주는 babel이나 webpack 등의 설정은 빌드가 된 이후 적용되기 때문에 빌드를 한 후 확인해야 한다.\n따라서, 아래부터는 yarn build 이후 웹을 띄우는 방법에 대한 내용이다.\n1$ yarn build\n\n우선, express를 설치해준다.\n1$ yarn add express\n\n그 다음, 프로젝트 폴더의 최상단에 server.js 파일을 생성하고 아래의 내용을 넣는다.\n12345678const express = require(\"express\");const path = require(\"path\");const app = express();app.use(express.static(path.join(__dirname, \"build\")));app.get(\"/\", function(req, res) &#123;  res.sendFile(path.join(__dirname, \"build\", \"index.html\"));&#125;);app.listen(8080); // 원하는 포트 번호\n\npackage.json을 보면 아래와 같은 내용이 있는데, 그 곳에 제일 아래 부분에 &quot;prod&quot;: &quot;node server.js&quot; 를 추가해주면 된다.\n123456789...&quot;scripts&quot;: &#123;  &quot;start&quot;: &quot;react-scripts start&quot;,  &quot;build&quot;: &quot;react-scripts build&quot;,  &quot;test&quot;: &quot;react-scripts test&quot;,  &quot;eject&quot;: &quot;react-scripts eject&quot;,  &quot;prod&quot;: &quot;node server.js&quot;&#125;,...\n\n후에 터미널에서 yarn prod를 입력하고, server.js 파일에서 설정해준 port로 로컬에서 접속하면 IE에서도 잘 뜨게 된다!\nThanks to. kkangil참고: Create-react-app V2 릴리즈! 무슨 변경 사항이 있을까?\n","dateCreated":"2019-11-18T15:07:55+09:00","dateModified":"2019-11-18T15:33:11+09:00","datePublished":"2019-11-18T15:07:55+09:00","description":"\nIE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.\n\nCRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원을 필요로 하고 있다. 따라서, 최신 CRA로 만들어진 React App을 IE에서 동작하게 하려면 react-app-polyfill 을 사용해야 한다.","headline":"CRA3로 만든 앱을 IE에서 띄우기","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/","keywords":"React, Create React App, CRA, Internet Explorer, IE"}</script>
+    <meta name="description" content="IE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.  CRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원">
+<meta name="keywords" content="React,Create React App,CRA,Internet Explorer,IE">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="CRA3로 만든 앱을 IE에서 띄우기">
+<meta property="og:url" content="https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/index.html">
+<meta property="og:site_name" content="공부방">
+<meta property="og:description" content="IE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.  CRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원">
+<meta property="og:locale" content="ko">
+<meta property="og:updated_time" content="2019-11-18T06:33:11.947Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CRA3로 만든 앱을 IE에서 띄우기">
+<meta name="twitter:description" content="IE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.  CRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원">
+    
+    
+        
+    
+    
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/cat.jpeg"/>
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/all.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            공부방
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+            <img class="header-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="저자에 대해 더 알아보기"
+                >
+                    <img class="sidebar-profile-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+                </a>
+                <h4 class="sidebar-profile-name">dajyu</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="About"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/cok2exe" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://stackoverflow.com/cok2exe" target="_blank" rel="noopener" title="Stack Overflow">
+                    
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            CRA3로 만든 앱을 IE에서 띄우기
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-11-18T15:07:55+09:00">
+	
+		    2019/11/18
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/React/">React</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <blockquote>
+<p>IE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.</p>
+</blockquote>
+<p>CRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원을 필요로 하고 있다. 따라서, 최신 CRA로 만들어진 React App을 IE에서 동작하게 하려면 <code>react-app-polyfill</code> 을 사용해야 한다.</p>
+<a id="more"></a>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yarn add react-app-polyfill</span><br></pre></td></tr></table></figure>
+
+<p>react-app-polyfill을 설치했다면, 가장 최상위 index.js인 /src/index.js에 아래 스크립트를 추가하면 된다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import &apos;react-app-polyfill/ie9&apos; // for IE9 +</span><br><span class="line">import &apos;react-app-polyfill/ie11&apos; // for IE11</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>위의 말한 스크립트를 추가해줬는데도, yarn start를 하면 IE에서는 빈 페이지만 뜬다. 왜 그럴까?<br>IE같이 최신 코드의 지원이 잘 되지 않는 브라우저<del>(멍청한 브라우저)</del>를 위해 최신 코드도 사용할 수 있도록 지원해주는 babel이나 webpack 등의 설정은 빌드가 된 이후 적용되기 때문에 빌드를 한 후 확인해야 한다.</p>
+<p>따라서, 아래부터는 yarn build 이후 웹을 띄우는 방법에 대한 내용이다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yarn build</span><br></pre></td></tr></table></figure>
+
+<p>우선, <code>express</code>를 설치해준다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ yarn add express</span><br></pre></td></tr></table></figure>
+
+<p>그 다음, 프로젝트 폴더의 최상단에 server.js 파일을 생성하고 아래의 내용을 넣는다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">"express"</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">"path"</span>);</span><br><span class="line"><span class="keyword">const</span> app = express();</span><br><span class="line">app.use(express.static(path.join(__dirname, <span class="string">"build"</span>)));</span><br><span class="line">app.get(<span class="string">"/"</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</span><br><span class="line">  res.sendFile(path.join(__dirname, <span class="string">"build"</span>, <span class="string">"index.html"</span>));</span><br><span class="line">&#125;);</span><br><span class="line">app.listen(<span class="number">8080</span>); <span class="comment">// 원하는 포트 번호</span></span><br></pre></td></tr></table></figure>
+
+<p>package.json을 보면 아래와 같은 내용이 있는데, 그 곳에 제일 아래 부분에 <code>&quot;prod&quot;: &quot;node server.js&quot;</code> 를 추가해주면 된다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">&quot;scripts&quot;: &#123;</span><br><span class="line">  &quot;start&quot;: &quot;react-scripts start&quot;,</span><br><span class="line">  &quot;build&quot;: &quot;react-scripts build&quot;,</span><br><span class="line">  &quot;test&quot;: &quot;react-scripts test&quot;,</span><br><span class="line">  &quot;eject&quot;: &quot;react-scripts eject&quot;,</span><br><span class="line">  &quot;prod&quot;: &quot;node server.js&quot;</span><br><span class="line">&#125;,</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>후에 터미널에서 <code>yarn prod</code>를 입력하고, server.js 파일에서 설정해준 port로 로컬에서 접속하면 IE에서도 잘 뜨게 된다!</p>
+<p>Thanks to. <a href="http://github.com/kkangil" target="_blank" rel="noopener">kkangil</a><br>참고: <a href="https://velog.io/@velopert/create-react-app-v2" target="_blank" rel="noopener">Create-react-app V2 릴리즈! 무슨 변경 사항이 있을까?</a></p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/CRA/">CRA</a> <a class="tag tag--primary tag--small t-link" href="/tags/Create-React-App/">Create React App</a> <a class="tag tag--primary tag--small t-link" href="/tags/IE/">IE</a> <a class="tag tag--primary tag--small t-link" href="/tags/Internet-Explorer/">Internet Explorer</a> <a class="tag tag--primary tag--small t-link" href="/tags/React/">React</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/12/React-기초다지기-5-Context-API/"
+                    data-tooltip="React 기초다지기-(5) Context API "
+                    aria-label="다음: React 기초다지기-(5) Context API "
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2019 dajyu. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/11/12/React-기초다지기-5-Context-API/"
+                    data-tooltip="React 기초다지기-(5) Context API "
+                    aria-label="다음: React 기초다지기-(5) Context API "
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+        
+            <h4 id="about-card-name">dajyu</h4>
+        
+            <div id="about-card-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Web frontend</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Asia/Seoul
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
