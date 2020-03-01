@@ -13,7 +13,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg"},"articleBody":"\nIE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.\n\nCRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원을 필요로 하고 있다. 따라서, 최신 CRA로 만들어진 React App을 IE에서 동작하게 하려면 react-app-polyfill 을 사용해야 한다.\n\n\n1$ yarn add react-app-polyfill\n\nreact-app-polyfill을 설치했다면, 가장 최상위 index.js인 /src/index.js에 아래 스크립트를 추가하면 된다.\n12import &apos;react-app-polyfill/ie9&apos; // for IE9 +import &apos;react-app-polyfill/ie11&apos; // for IE11\n\n\n위의 말한 스크립트를 추가해줬는데도, yarn start를 하면 IE에서는 빈 페이지만 뜬다. 왜 그럴까?IE같이 최신 코드의 지원이 잘 되지 않는 브라우저(멍청한 브라우저)를 위해 최신 코드도 사용할 수 있도록 지원해주는 babel이나 webpack 등의 설정은 빌드가 된 이후 적용되기 때문에 빌드를 한 후 확인해야 한다.\n따라서, 아래부터는 yarn build 이후 웹을 띄우는 방법에 대한 내용이다.\n1$ yarn build\n\n우선, express를 설치해준다.\n1$ yarn add express\n\n그 다음, 프로젝트 폴더의 최상단에 server.js 파일을 생성하고 아래의 내용을 넣는다.\n12345678const express = require(\"express\");const path = require(\"path\");const app = express();app.use(express.static(path.join(__dirname, \"build\")));app.get(\"/\", function(req, res) &#123;  res.sendFile(path.join(__dirname, \"build\", \"index.html\"));&#125;);app.listen(8080); // 원하는 포트 번호\n\npackage.json을 보면 아래와 같은 내용이 있는데, 그 곳에 제일 아래 부분에 &quot;prod&quot;: &quot;node server.js&quot; 를 추가해주면 된다.\n123456789...&quot;scripts&quot;: &#123;  &quot;start&quot;: &quot;react-scripts start&quot;,  &quot;build&quot;: &quot;react-scripts build&quot;,  &quot;test&quot;: &quot;react-scripts test&quot;,  &quot;eject&quot;: &quot;react-scripts eject&quot;,  &quot;prod&quot;: &quot;node server.js&quot;&#125;,...\n\n후에 터미널에서 yarn prod를 입력하고, server.js 파일에서 설정해준 port로 로컬에서 접속하면 IE에서도 잘 뜨게 된다!\nThanks to. kkangil참고: Create-react-app V2 릴리즈! 무슨 변경 사항이 있을까?\n","dateCreated":"2019-11-18T15:07:55+09:00","dateModified":"2019-11-18T15:33:11+09:00","datePublished":"2019-11-18T15:07:55+09:00","description":"\nIE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.\n\nCRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원을 필요로 하고 있다. 따라서, 최신 CRA로 만들어진 React App을 IE에서 동작하게 하려면 react-app-polyfill 을 사용해야 한다.","headline":"CRA3로 만든 앱을 IE에서 띄우기","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"cat.jpeg","logo":{"@type":"ImageObject","url":"cat.jpeg"}},"url":"https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/","keywords":"React, Create React App, CRA, Internet Explorer, IE"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"over.jpg"},"articleBody":"\nIE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.\n\nCRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원을 필요로 하고 있다. 따라서, 최신 CRA로 만들어진 React App을 IE에서 동작하게 하려면 react-app-polyfill 을 사용해야 한다.\n\n\n1$ yarn add react-app-polyfill\n\nreact-app-polyfill을 설치했다면, 가장 최상위 index.js인 /src/index.js에 아래 스크립트를 추가하면 된다.\n12import &apos;react-app-polyfill/ie9&apos; // for IE9 +import &apos;react-app-polyfill/ie11&apos; // for IE11\n\n\n위의 말한 스크립트를 추가해줬는데도, yarn start를 하면 IE에서는 빈 페이지만 뜬다. 왜 그럴까?IE같이 최신 코드의 지원이 잘 되지 않는 브라우저(멍청한 브라우저)를 위해 최신 코드도 사용할 수 있도록 지원해주는 babel이나 webpack 등의 설정은 빌드가 된 이후 적용되기 때문에 빌드를 한 후 확인해야 한다.\n따라서, 아래부터는 yarn build 이후 웹을 띄우는 방법에 대한 내용이다.\n1$ yarn build\n\n우선, express를 설치해준다.\n1$ yarn add express\n\n그 다음, 프로젝트 폴더의 최상단에 server.js 파일을 생성하고 아래의 내용을 넣는다.\n12345678const express = require(\"express\");const path = require(\"path\");const app = express();app.use(express.static(path.join(__dirname, \"build\")));app.get(\"/\", function(req, res) &#123;  res.sendFile(path.join(__dirname, \"build\", \"index.html\"));&#125;);app.listen(8080); // 원하는 포트 번호\n\npackage.json을 보면 아래와 같은 내용이 있는데, 그 곳에 제일 아래 부분에 &quot;prod&quot;: &quot;node server.js&quot; 를 추가해주면 된다.\n123456789...&quot;scripts&quot;: &#123;  &quot;start&quot;: &quot;react-scripts start&quot;,  &quot;build&quot;: &quot;react-scripts build&quot;,  &quot;test&quot;: &quot;react-scripts test&quot;,  &quot;eject&quot;: &quot;react-scripts eject&quot;,  &quot;prod&quot;: &quot;node server.js&quot;&#125;,...\n\n후에 터미널에서 yarn prod를 입력하고, server.js 파일에서 설정해준 port로 로컬에서 접속하면 IE에서도 잘 뜨게 된다!\nThanks to. kkangil참고: Create-react-app V2 릴리즈! 무슨 변경 사항이 있을까?\n","dateCreated":"2019-11-18T15:07:55+09:00","dateModified":"2019-11-18T15:33:11+09:00","datePublished":"2019-11-18T15:07:55+09:00","description":"\nIE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.\n\nCRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원을 필요로 하고 있다. 따라서, 최신 CRA로 만들어진 React App을 IE에서 동작하게 하려면 react-app-polyfill 을 사용해야 한다.","headline":"CRA3로 만든 앱을 IE에서 띄우기","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"over.jpg","logo":{"@type":"ImageObject","url":"over.jpg"}},"url":"https://cok2exe.github.io/2019/11/18/CRA3로-만든-앱을-IE에서-띄우기/","keywords":"React, Create React App, CRA, Internet Explorer, IE"}</script>
     <meta name="description" content="IE를 외면하고 싶어도 외면할 수 없는 때가 있다. 그럴 때마다 검색해서 IE 지원방법 등을 매번 구글링하는게 시간이 아깝기도 하여… 블로그에 방법을 올려서 필요할 때마다 확인하려 한다.  CRA v2 부터는 Internet Explorer를 기본적으로 지원하지 않게 되었다. (웹 시장에서 점점 외면받고 있는 IE…) 하지만 아직도 많은 곳에서 IE 지원">
 <meta name="keywords" content="React,Create React App,CRA,Internet Explorer,IE">
 <meta property="og:type" content="blog">
@@ -31,7 +31,7 @@
         
     
     
-        <meta property="og:image" content="https://cok2exe.github.io/assets/images/cat.jpeg"/>
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/over.jpg"/>
     
     
     
@@ -82,7 +82,7 @@
             >
         
         
-            <img class="header-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+            <img class="header-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
         
         </a>
     
@@ -103,7 +103,7 @@
                     href="/#about"
                     aria-label="저자에 대해 더 알아보기"
                 >
-                    <img class="sidebar-profile-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+                    <img class="sidebar-profile-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
                 </a>
                 <h4 class="sidebar-profile-name">dajyu</h4>
                 
@@ -524,7 +524,7 @@
             <i class="fa fa-times"></i>
         </div>
         
-            <img id="about-card-picture" src="/assets/images/cat.jpeg" alt="저자 이미지"/>
+            <img id="about-card-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
         
             <h4 id="about-card-name">dajyu</h4>
         
