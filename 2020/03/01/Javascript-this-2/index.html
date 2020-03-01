@@ -1,0 +1,622 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="공부방">
+    <title>[Javascript] this (2) - 공부방</title>
+    <meta name="author" content="dajyu">
+    
+        <meta name="keywords" content="React,Typescript,HTML,CSS,Frontend,">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"over.jpg"},"articleBody":"2. 명시적으로 this를 바인딩하는 방법[Javascript] this (1)에서 상황별로 this에 어떤 값이 바인딩되는지를 살펴봤지만 이러한 규칙을 깨고 this에 별도의 대상을 바인딩하는 방법도 있다.\n\n\n2-1. call 메서드1Function.prototype.call(thisArg[, arg1[, arg2[, ...]]])\n\ncall 메서드는 메서드의 호출 주체인 함수를 즉시 실행하도록 하는 명령이다. 이때 call 메서드의 첫 번째 인자를 this로 바인딩하고, 이후의 인자들을 호출할 함수의 매개변수로 한다. 함수를 그냥 실행하면 this는 전역객체를 참조하지만 call 메서드를 이용하면 임의의 객체를 this로 지정할 수 있다.\n메서드에 대해서도 마찬가지로 객체의 메서드를 그냥 호출하면 this는 객체를 참조하지만 call 메서드를 이용하면 임의의 객체를 this로 지정할 수 있다.\n12345678910111213141516var func = function(a, b, c) &#123;  console.log(this, a, b, c);&#125;;func(1, 2, 3); // Window&#123; ... &#125; 1 2 3func.call(&#123; x: 1 &#125;, 4, 5, 6); // &#123; x: 1&#125; 4 5 6var obj = &#123;  a: 1,  method: function(x, y) &#123;    console.log(this.a, x, y);  &#125;&#125;;obj.method(2, 3); // 1 2 3obj.method.call(&#123; a: 4 &#125;, 5, 6); // 4 5 6\n\n2-2. apply 메서드1Function.prototype.apply(thisArg[, argsArray])\n\napply 메서드는 call 메서드와 기능적으로 완전히 동일하다. call 메서드는 첫 번째 인자를 제외한 나머지 모든 인자들을 호출할 함수의 매개변수로 지정하는 반면, apply 메서드는 두 번째 인자를 배열로 받아 그 배열의 요소들을 호출할 함수의 매개변수로 지정한다는 점에서만 차이가 있다.\n123456789101112var func = function(a, b, c) &#123;  console.log(this, a, b, c);&#125;;func.apply(&#123; x: 1 &#125;, [4, 5, 6]); // &#123; x: 1 &#125; 4 5 6var obj = &#123;  a: 1,  method: function(x, y) &#123;    console.log(this.a, x, y);  &#125;&#125;;obj.method.apply(&#123; a: 4 &#125;, [5, 6]); // &#123; a: 4 &#125; 5 6\n\n2-3. call / apply 메서드의 활용call이나 apply 메서드를 잘 활용하면 자바스크립트를 더욱 다채롭게 사용할 수 있다.\n유사배열객체에 배열 메서드를 적용\n1234567891011var obj = &#123;  0: \"a\",  1: \"b\",  2: \"c\",  length: 3&#125;;Array.prototype.push.call(obj, \"d\");console.log(obj); // &#123; 0: 'a', 1: 'b', 2: 'c', 3: 'd', length: 4 &#125;var arr = Array.prototype.slice.call(obj);console.log(arr); // ['a', 'b', 'c', 'd']\n\n객체에는 배열 메서드를 직접 적용할 수 없다. 그러나 키가 0 또는 양의 정수인 프로퍼티가 존재하고 length 프로퍼티의 값이 0 또는 양수 정수인 객체, 즉 배열의 구조와 유사한 객체의 경우(유사배열객체) call 또는 apply 메서드를 이용해 배열 메서드를 차용할 수 있다.\n함수 내부에서 접근할 수 있는 arguments 객체도 유사배열객체이므로 위의 방법으로 배열로 전환해서 사용할 수 있다. querySelectorAll, getElementByClassName 등의 Node 선택자로 선택한 결과인 NodeList도 마찬가지이다. (샘플 코드 실행 결과는 이곳에서!)\n그 밖에도 유사배열객체에는 call/apply 메서드를 이용해 모든 배열 메서드를 적용할 수 있다. 배열처럼 인덱스와 length 프로퍼티를 지니는 문자열에 대해서도 마찬가지이다. 단, 문자열의 경우 length 프로퍼티가 읽기 전용이기 때문에 원본 문자열에 변경을 가하는 메서드(push, pop, shift, splice 등)는 에러를 던지며, concat처럼 대상이 반드시 배열이어야 하는 경우에는 에러는 나지 않지만 제대로 된 결과를 얻을 수 없다.\nES6에서는 유사배열객체 또는 순회 가능한 모든 종류의 데이터 타입을 배열로 전환하는 Array.from 메서드를 새로 도입했다.\n12345678var obj = &#123;  0: 'a',  1: 'b',  2: 'c',  length: 3&#125;;var arr = Array.from(obj)lconsole.log(arr); // ['a', 'b', 'c']\n\n생성자 내부에서 다른 생성자를 호출\n생성자 내부에 다른 생성자와 공통된 내용이 있을 경우 call 또는 apply를 이용해 다른 생성자를 호출하면 간단하게 반복을 줄일 수 있다.\n1234567891011121314function Person(name, gender) &#123;  this.name = name;  this.gender = gender;&#125;function Student(name, gender, school) &#123;  Person.call(this, name, gender);  this.school = school;&#125;function Employee(name, gender, company) &#123;  Person.apply(this, [name, gender]);  this.company = company;&#125;var by = new Student(\"보영\", \"female\", \"단국대\");var jn = new Employee(\"재난\", \"male\", \"구골\");\n\n여러 인수를 묶어 하나의 배열로 전달하고 싶을 때 - apply 활용\n여러 개의 인수를 받는 메서드에게 하나의 배열로 인수들을 전달하고 싶을 때 apply 메서드를 사용하면 좋다. 예를 들어, 배열에서 최대/최솟값을 구해야 할 경우 apply를 사용하지 않는다면 부득이하게 다음과 같은 방식으로 직접 구현할 수밖에 없을 것이다.\n1234567891011var numbers = [10, 20, 3, 16, 45];var max = (min = numbers[0]);numbers.forEach(function(number) &#123;  if (number &gt; max) &#123;    max = number;  &#125;  if (number &lt; min) &#123;    min = number;  &#125;&#125;);console.log(max, min); // 45 3\n\n코드가 불필요하게 길고 가독성도 떨어진다. 이보다는 Math.max/Math.min 메서드에 apply를 적용하면 훨씬 간단해진다.\n1234var numbers = [10, 20, 3, 16, 45];var max = Math.max.apply(null, numbers);var min = Math.min.apply(null, numbers);console.log(max, min); // 45 3\n\n참고로 ES6에서는 펼치기 연산자(spread operator)를 이용하면 apply를 적용하는 것보다 더욱 간편하게 작성할 수 있다.\n1234const numbers = [10, 20, 3, 16, 45];const max = Math.max(...numbers);const min = Math.min(...numbers);console.log(max, min); // 45 3\n\ncall/apply 메서드는 명시적으로 별도의 this를 바인딩하면서 함수 또는 메서드를 실행하는 훌륭한 방법이지만 오히려 이로 인해 this를 예측하기 어렵게 만들어 코드 해석을 방해한다는 단점이 있다. 그럼에도 불구하고 ES5 이하의 환경에서는 마땅한 대안이 없기 때문에 실무에서 매우 광범위하게 활용되고 있다.\n2-4. bind 메서드1Function.prototype.bind(thisArg, [, arg1, [, arg2[, ...]]])\n\nbind 메서드는 ES5에서 추가된 기능으로, call과 비슷하지만 즉시 호출하지는 않고 넘겨 받은 this 및 인수들을 바탕으로 새로운 함수를 반환하기만 하는 메서드이다. 다시 새로운 함수를 호출할 때 인수를 넘기면 그 인수들은 기존 bind 메서드를 호출할 때 전달했던 인수들의 뒤에 이어서 등록된다. 즉 bind 메서드는 함수에 this를 미리 적용하는 것과 부분 적용 함수를 구현하는 두 가지 목적을 모두 지닌다.\n1234567891011var func = function(a, b, c, d) &#123;  console.log(this, a, b, c, d);&#125;;func(1, 2, 3, 4); // Window&#123; ... &#125; 1 2 3 4var bindFunc1 = func.bind(&#123; x: 1 &#125;);bindFunc1(5, 6, 7, 8); // &#123; x: 1 &#125; 5 6 7 8var bindFunc2 = func.bind(&#123; x: 1 &#125;, 4, 5);bindFunc2(6, 7); // &#123; x: 1 &#125; 4 5 6 7bindFunc2(8, 9); // &#123; x: 1 &#125; 4 5 8 9\n\n6번째 줄에서 bindFunc1 변수에는 func에 this를 { x: 1 } 로 지정한 새로운 함수가 담긴다. 이제 7번째 줄에서 bindFunc1을 호출하면 원하는 결과를 얻을 수 있게 된다. 한편 9번째 줄의 bindFunc2 변수에는 func에 this를 { x: 1 }로 지정하고, 앞에서부터 두 개의 인수를 각각 4, 5로 지정한 새로운 함수를 담았다. 이후 10번째 줄에서 매개변수로 6, 7을 넘기면 this 값이 바뀐 것을 제외하고는 최초 func 함수에 4, 5, 6, 7을 넘긴 것과 같은 동작을 한다. 11번째 줄에서도 마찬가지이다. 6번째 줄의 bind는 this만을 지정한 것이고, 9번째 줄의 bind는 this 지정과 함께 부분 적용 함수를 구현한 것이다.\nname 프로퍼티\nbind 메서드를 적용해서 새로 만든 함수는 한 가지 독특한 성질이 있다. 바로 name 프로퍼티에 동사 bind의 수동태인 ‘bound’라는 접두어가 붙는다는 점이다. 어떤 함수의 name 프로퍼티가 ‘bound xxx’라면 이는 곧 함수명이 xxx인 원본 함수에 bind 메서드를 적용한 새로운 함수라는 의미가 되므로 기존의 call이나 apply보다 코드를 추적하기에 더 수월해진 면이 있다.\n123456var func = function(a, b, c, d) &#123;  console.log(this, a, b, c, d);&#125;;var bindFunc = func.bind(&#123; x: 1 &#125;, 4, 5);console.log(func.name); // funcconsole.log(bindFunc.name); // bound func\n\n상위 컨텍스트의 this를 내부함수나 콜백 함수에 전달하기\n1-3에서 메서드의 내부함수에서 메서드의 this를 그대로 바라보게 하기 위한 방법으로 self 등의 변수를 활용한 우회법이 있었는데, call, apply 또는 bind 메서드를 이용하면 더 깔끔하게 처리할 수 있다.\n12345678910var obj = &#123;  outer: function() &#123;    console.log(this);    var innerFunc = function() &#123;      console.log(this);    &#125;;    innerFunc.call(this);  &#125;&#125;;obj.outer();\n\n12345678910var obj = &#123;  outer: function() &#123;    console.log(this);    var innerFunc = function() &#123;      console.log(this);    &#125;.bind(this);    innerFunc();  &#125;&#125;;obj.outer();\n\n또한 콜백 함수를 인자로 받는 함수나 메서드 중에서 기본적으로 콜백 함수 내에서의 this에 관여하는 함수 또는 메서드에 대해서도 bind 메서드를 이용하면 this 값을 사용자의 입맛에 맞게 바꿀 수 있다.\n12345678910111213var obj = &#123;  logThis: function() &#123;    console.log(this);  &#125;,  logThisLater1: function() &#123;    setTimeout(this.logThis, 500);  &#125;,  logThisLater2: function() &#123;    setTimeout(this.logThis.bind(this), 1000);  &#125;&#125;;obj.logThisLater1(); // Window &#123; ... &#125;obj.logThisLater2(); // obj &#123; logThis: f, ... &#125;\n\n2-5. 화살표 함수의 예외사항ES6에 새롭게 도입된 화살표 함수는 실행 컨텍스트 생성 시 this를 바인딩하는 과정이 제외됐다. 즉 이 함수 내부에는 this가 아예 없으며, 접근하고자 하면 스코프체인상 가장 가까운 this에 접근하게 된다.\n12345678910var obj = &#123;  outer: function() &#123;    console.log(this);    var innerFunc = () =&gt; &#123;      console.log(this);    &#125;;    innerFunc();  &#125;&#125;;obj.outer();\n\n이렇게 하면 별도의 변수로 this를 우회하거나 call/apply/bind를 적용할 필요가 없어 더욱 간결하고 편리하다.\n2-6. 별도의 인자로 this를 받는 경우(콜백 함수 내에서의 this)콜백 함수를 인자로 받는 메서드 중 일부는 추가로 this로 지정할 객체(thisArg)를 인자로 지정할 수 있는 경우가 있다. 이러한 메서드의 thisArg 값을 지정하면 콜백 함수 내부에서의 this 값을 원하는 대로 변경할 수 있다. 이런 형태는 여러 내부 요소에 대해 같은 동작을 반복 수행해야 하는 배열 메서드에 많이 포진돼 있으며, 같은 이유로 ES6에서 새로 등장한 Set, Map 등의 메서드에도 일부 존재한다. 그중 대표적인 배열 메서드인 forEach의 예는 이렇다.\n12345678910111213141516var report = &#123;  sum: 0,  count: 0,  add: function() &#123;    var args = Array.prototype.slice.call(arguments);    args.forEach(function(entry) &#123;      this.sum += entry;      ++this.count;    &#125;, this);  &#125;,  average: function() &#123;    return this.sum / this.count;  &#125;&#125;;report.add(60, 85, 95);console.log(report.sum, report, count, report.average()); // 240 3 80\n\nreport 객체에는 sum, count 프로퍼티가 있고, add, average 메서드가 있다. 5번째 줄에서 add 메서드는 argumnets를 배열로 변환해서 args 변수에 담고, 6번째 줄에서는 이 배열을 순회하면서 콜백 함수를 실행하는데, 이때 콜백 함수 내부에서의 this는 forEach 함수의 두 번째 인자로 전달해준 this(9번째 줄)가 바인딩된다. 11번째 줄의 average는 sum 프로퍼티를 count 프로퍼티로 나눈 결과를 반환하는 메서드이다.\n15번째 줄에서 60, 85, 95를 인자로 삼아 add 메서드를 호출하면 이 세 인자를 배열로 만들어 forEach 메서드가 실행된다. 콜백 함수 내부에서의 this는 add 메서드에서의 this가 전달된 상태이므로 add 메서드의 this(report)를 그대로 가리키고 있다. 따라서 배열의 세 요소를 순회하면서 report.sum 값 및 report.count 값이 차례로 바뀌고, 순회를 마친 결과 report.sum에는 240이, report, count에는 3이 담기게 된다.\n배열의 forEach를 예로 들었지만, 이 밖에도 thisArg를 인자로 받는 메서드는 꽤 많이 있다.\n1234567891011Array.prototype.forEach(callback[, thisArg])Array.prototype.map(callback[, thisArg])Array.prototype.filter(callback[, thisArg])Array.prototype.some(callback[, thisArg])Array.prototype.every(callback[, thisArg])Array.prototype.find(callback[, thisArg])Array.prototype.findIndex(callback[, thisArg])Array.prototype.flatMap(callback[, thisArg])Array.prototype.from(arrayLike[, callback[, thisArg]])Set.prototype.forEach(callback[, thisArg])Map.prototype.forEach(callback[, thisArg])\n\n\n정리다음 규칙은 명시적 this 바인딩이 없는 한 늘 성립한다.\n\n전역공간에서의 this는 전역객체(브라우저에서는 window, Node.js에서는 global)를 참조한다.\n어떤 함수를 메서드로서 호출한 경우 this는 메서드 호출 주체(메서드명 앞의 객체)를 참조한다.\n어떤 함수를 함수로서 호출한 경우 this는 전역객체를 참조한다. 메서드의 내부함수에도 같다.\n콜백 함수 내부에서의 this는 해당 콜백 함수의 제어권을 넘겨받은 함수가 정의한 바에 따르며, 정의하지 않은 경우에는 전역객체를 참조한다.\n생성자 함수에서의 this는 생성될 인스턴스를 참조한다.\n\n다음은 명시적 this 바인딩이다. 위 규칙에 부합하지 않는 경우에는 다음 내용을 바탕으로 this를 예측할 수 있다.\n\ncall, apply 메서드는 this를 명시적으로 지정하면서 함수 또는 메서드를 호출한다.\nbind 메서드는 this 및 함수에 넘길 인수를 일부 지정해서 새로운 함수를 만든다.\n요소를 순회하면서 콜백 함수를 반복 호출하는 내용의 일부 메서드는 별도의 인자로 this를 받기도 한다.\n\n출처 : 코어 자바스크립트\n","dateCreated":"2020-03-01T11:59:36+09:00","dateModified":"2020-03-01T13:50:18+09:00","datePublished":"2020-03-01T11:59:36+09:00","description":"2. 명시적으로 this를 바인딩하는 방법[Javascript] this (1)에서 상황별로 this에 어떤 값이 바인딩되는지를 살펴봤지만 이러한 규칙을 깨고 this에 별도의 대상을 바인딩하는 방법도 있다.","headline":"[Javascript] this (2)","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2020/03/01/Javascript-this-2/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"over.jpg","logo":{"@type":"ImageObject","url":"over.jpg"}},"url":"https://cok2exe.github.io/2020/03/01/Javascript-this-2/","keywords":"Javascript, this"}</script>
+    <meta name="description" content="2. 명시적으로 this를 바인딩하는 방법[Javascript] this (1)에서 상황별로 this에 어떤 값이 바인딩되는지를 살펴봤지만 이러한 규칙을 깨고 this에 별도의 대상을 바인딩하는 방법도 있다.">
+<meta name="keywords" content="Javascript,this">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="[Javascript] this (2)">
+<meta property="og:url" content="https://cok2exe.github.io/2020/03/01/Javascript-this-2/index.html">
+<meta property="og:site_name" content="공부방">
+<meta property="og:description" content="2. 명시적으로 this를 바인딩하는 방법[Javascript] this (1)에서 상황별로 this에 어떤 값이 바인딩되는지를 살펴봤지만 이러한 규칙을 깨고 this에 별도의 대상을 바인딩하는 방법도 있다.">
+<meta property="og:locale" content="ko">
+<meta property="og:updated_time" content="2020-03-01T04:50:18.343Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[Javascript] this (2)">
+<meta name="twitter:description" content="2. 명시적으로 this를 바인딩하는 방법[Javascript] this (1)에서 상황별로 this에 어떤 값이 바인딩되는지를 살펴봤지만 이러한 규칙을 깨고 this에 별도의 대상을 바인딩하는 방법도 있다.">
+    
+    
+        
+    
+    
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/over.jpg"/>
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/all.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            공부방
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+            <img class="header-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="저자에 대해 더 알아보기"
+                >
+                    <img class="sidebar-profile-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
+                </a>
+                <h4 class="sidebar-profile-name">dajyu</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="About"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/cok2exe" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://stackoverflow.com/cok2exe" target="_blank" rel="noopener" title="Stack Overflow">
+                    
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            [Javascript] this (2)
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2020-03-01T11:59:36+09:00">
+	
+		    2020/03/01
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/Javascript/">Javascript</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <h3 id="2-명시적으로-this를-바인딩하는-방법"><a href="#2-명시적으로-this를-바인딩하는-방법" class="headerlink" title="2. 명시적으로 this를 바인딩하는 방법"></a>2. 명시적으로 this를 바인딩하는 방법</h3><p><a href="https://cok2exe.github.io/2020/03/01/Javascript-this/">[Javascript] this (1)</a>에서 상황별로 <code>this</code>에 어떤 값이 바인딩되는지를 살펴봤지만 이러한 규칙을 깨고 <code>this</code>에 별도의 대상을 바인딩하는 방법도 있다.</p>
+<a id="more"></a>
+
+<h4 id="2-1-call-메서드"><a href="#2-1-call-메서드" class="headerlink" title="2-1. call 메서드"></a>2-1. call 메서드</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Function</span>.prototype.call(thisArg[, arg1[, arg2[, ...]]])</span><br></pre></td></tr></table></figure>
+
+<p><code>call</code> 메서드는 메서드의 호출 주체인 함수를 즉시 실행하도록 하는 명령이다. 이때 call 메서드의 첫 번째 인자를 this로 바인딩하고, 이후의 인자들을 호출할 함수의 매개변수로 한다. 함수를 그냥 실행하면 <code>this</code>는 전역객체를 참조하지만 <code>call</code> 메서드를 이용하면 임의의 객체를 <code>this</code>로 지정할 수 있다.</p>
+<p>메서드에 대해서도 마찬가지로 객체의 메서드를 그냥 호출하면 <code>this</code>는 객체를 참조하지만 <code>call</code> 메서드를 이용하면 임의의 객체를 <code>this</code>로 지정할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> func = <span class="function"><span class="keyword">function</span>(<span class="params">a, b, c</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">this</span>, a, b, c);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">func(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>); <span class="comment">// Window&#123; ... &#125; 1 2 3</span></span><br><span class="line">func.call(&#123; <span class="attr">x</span>: <span class="number">1</span> &#125;, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>); <span class="comment">// &#123; x: 1&#125; 4 5 6</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  a: <span class="number">1</span>,</span><br><span class="line">  method: <span class="function"><span class="keyword">function</span>(<span class="params">x, y</span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="keyword">this</span>.a, x, y);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">obj.method(<span class="number">2</span>, <span class="number">3</span>); <span class="comment">// 1 2 3</span></span><br><span class="line">obj.method.call(&#123; <span class="attr">a</span>: <span class="number">4</span> &#125;, <span class="number">5</span>, <span class="number">6</span>); <span class="comment">// 4 5 6</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-2-apply-메서드"><a href="#2-2-apply-메서드" class="headerlink" title="2-2. apply 메서드"></a>2-2. apply 메서드</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Function</span>.prototype.apply(thisArg[, argsArray])</span><br></pre></td></tr></table></figure>
+
+<p><code>apply</code> 메서드는 <code>call</code> 메서드와 <u>기능적으로 완전히 동일</u>하다. <code>call</code> 메서드는 첫 번째 인자를 제외한 나머지 모든 인자들을 호출할 함수의 매개변수로 지정하는 반면, <code>apply</code> 메서드는 두 번째 인자를 배열로 받아 그 배열의 요소들을 호출할 함수의 매개변수로 지정한다는 점에서만 차이가 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> func = <span class="function"><span class="keyword">function</span>(<span class="params">a, b, c</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">this</span>, a, b, c);</span><br><span class="line">&#125;;</span><br><span class="line">func.apply(&#123; <span class="attr">x</span>: <span class="number">1</span> &#125;, [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]); <span class="comment">// &#123; x: 1 &#125; 4 5 6</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  a: <span class="number">1</span>,</span><br><span class="line">  method: <span class="function"><span class="keyword">function</span>(<span class="params">x, y</span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="keyword">this</span>.a, x, y);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">obj.method.apply(&#123; <span class="attr">a</span>: <span class="number">4</span> &#125;, [<span class="number">5</span>, <span class="number">6</span>]); <span class="comment">// &#123; a: 4 &#125; 5 6</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-3-call-apply-메서드의-활용"><a href="#2-3-call-apply-메서드의-활용" class="headerlink" title="2-3. call / apply 메서드의 활용"></a>2-3. call / apply 메서드의 활용</h4><p><code>call</code>이나 <code>apply</code> 메서드를 잘 활용하면 자바스크립트를 더욱 다채롭게 사용할 수 있다.</p>
+<p><strong>유사배열객체에 배열 메서드를 적용</strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  <span class="number">0</span>: <span class="string">"a"</span>,</span><br><span class="line">  <span class="number">1</span>: <span class="string">"b"</span>,</span><br><span class="line">  <span class="number">2</span>: <span class="string">"c"</span>,</span><br><span class="line">  length: <span class="number">3</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">Array</span>.prototype.push.call(obj, <span class="string">"d"</span>);</span><br><span class="line"><span class="built_in">console</span>.log(obj); <span class="comment">// &#123; 0: 'a', 1: 'b', 2: 'c', 3: 'd', length: 4 &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> arr = <span class="built_in">Array</span>.prototype.slice.call(obj);</span><br><span class="line"><span class="built_in">console</span>.log(arr); <span class="comment">// ['a', 'b', 'c', 'd']</span></span><br></pre></td></tr></table></figure>
+
+<p>객체에는 배열 메서드를 직접 적용할 수 없다. 그러나 <u>키가 0 또는 양의 정수인 프로퍼티가 존재하고 length 프로퍼티의 값이 0 또는 양수 정수인 객체</u>, 즉 배열의 구조와 유사한 객체의 경우(유사배열객체) <code>call</code> 또는 <code>apply</code> 메서드를 이용해 배열 메서드를 차용할 수 있다.</p>
+<p>함수 내부에서 접근할 수 있는 arguments 객체도 유사배열객체이므로 위의 방법으로 배열로 전환해서 사용할 수 있다. querySelectorAll, getElementByClassName 등의 Node 선택자로 선택한 결과인 NodeList도 마찬가지이다. (<a href="https://codesandbox.io/s/call-apply-arguments-nodelist-example-wxodd" target="_blank" rel="noopener">샘플 코드 실행 결과는 이곳에서!</a>)</p>
+<p>그 밖에도 유사배열객체에는 call/apply 메서드를 이용해 모든 배열 메서드를 적용할 수 있다. 배열처럼 인덱스와 length 프로퍼티를 지니는 문자열에 대해서도 마찬가지이다. 단, 문자열의 경우 length 프로퍼티가 읽기 전용이기 때문에 원본 문자열에 변경을 가하는 메서드(push, pop, shift, splice 등)는 에러를 던지며, concat처럼 대상이 반드시 배열이어야 하는 경우에는 에러는 나지 않지만 제대로 된 결과를 얻을 수 없다.</p>
+<p>ES6에서는 유사배열객체 또는 순회 가능한 모든 종류의 데이터 타입을 배열로 전환하는 Array.from 메서드를 새로 도입했다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  <span class="number">0</span>: <span class="string">'a'</span>,</span><br><span class="line">  <span class="number">1</span>: <span class="string">'b'</span>,</span><br><span class="line">  <span class="number">2</span>: <span class="string">'c'</span>,</span><br><span class="line">  length: <span class="number">3</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">var</span> arr = <span class="built_in">Array</span>.from(obj)l</span><br><span class="line"><span class="built_in">console</span>.log(arr); <span class="comment">// ['a', 'b', 'c']</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>생성자 내부에서 다른 생성자를 호출</strong></p>
+<p>생성자 내부에 다른 생성자와 공통된 내용이 있을 경우 call 또는 apply를 이용해 다른 생성자를 호출하면 간단하게 반복을 줄일 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name, gender</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>.name = name;</span><br><span class="line">  <span class="keyword">this</span>.gender = gender;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Student</span>(<span class="params">name, gender, school</span>) </span>&#123;</span><br><span class="line">  Person.call(<span class="keyword">this</span>, name, gender);</span><br><span class="line">  <span class="keyword">this</span>.school = school;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Employee</span>(<span class="params">name, gender, company</span>) </span>&#123;</span><br><span class="line">  Person.apply(<span class="keyword">this</span>, [name, gender]);</span><br><span class="line">  <span class="keyword">this</span>.company = company;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> by = <span class="keyword">new</span> Student(<span class="string">"보영"</span>, <span class="string">"female"</span>, <span class="string">"단국대"</span>);</span><br><span class="line"><span class="keyword">var</span> jn = <span class="keyword">new</span> Employee(<span class="string">"재난"</span>, <span class="string">"male"</span>, <span class="string">"구골"</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>여러 인수를 묶어 하나의 배열로 전달하고 싶을 때 - apply 활용</strong></p>
+<p>여러 개의 인수를 받는 메서드에게 하나의 배열로 인수들을 전달하고 싶을 때 apply 메서드를 사용하면 좋다. 예를 들어, 배열에서 최대/최솟값을 구해야 할 경우 apply를 사용하지 않는다면 부득이하게 다음과 같은 방식으로 직접 구현할 수밖에 없을 것이다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">10</span>, <span class="number">20</span>, <span class="number">3</span>, <span class="number">16</span>, <span class="number">45</span>];</span><br><span class="line"><span class="keyword">var</span> max = (min = numbers[<span class="number">0</span>]);</span><br><span class="line">numbers.forEach(<span class="function"><span class="keyword">function</span>(<span class="params">number</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (number &gt; max) &#123;</span><br><span class="line">    max = number;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (number &lt; min) &#123;</span><br><span class="line">    min = number;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br><span class="line"><span class="built_in">console</span>.log(max, min); <span class="comment">// 45 3</span></span><br></pre></td></tr></table></figure>
+
+<p>코드가 불필요하게 길고 가독성도 떨어진다. 이보다는 Math.max/Math.min 메서드에 apply를 적용하면 훨씬 간단해진다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> numbers = [<span class="number">10</span>, <span class="number">20</span>, <span class="number">3</span>, <span class="number">16</span>, <span class="number">45</span>];</span><br><span class="line"><span class="keyword">var</span> max = <span class="built_in">Math</span>.max.apply(<span class="literal">null</span>, numbers);</span><br><span class="line"><span class="keyword">var</span> min = <span class="built_in">Math</span>.min.apply(<span class="literal">null</span>, numbers);</span><br><span class="line"><span class="built_in">console</span>.log(max, min); <span class="comment">// 45 3</span></span><br></pre></td></tr></table></figure>
+
+<p>참고로 ES6에서는 펼치기 연산자(spread operator)를 이용하면 apply를 적용하는 것보다 더욱 간편하게 작성할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> numbers = [<span class="number">10</span>, <span class="number">20</span>, <span class="number">3</span>, <span class="number">16</span>, <span class="number">45</span>];</span><br><span class="line"><span class="keyword">const</span> max = <span class="built_in">Math</span>.max(...numbers);</span><br><span class="line"><span class="keyword">const</span> min = <span class="built_in">Math</span>.min(...numbers);</span><br><span class="line"><span class="built_in">console</span>.log(max, min); <span class="comment">// 45 3</span></span><br></pre></td></tr></table></figure>
+
+<p>call/apply 메서드는 명시적으로 별도의 <code>this</code>를 바인딩하면서 함수 또는 메서드를 실행하는 훌륭한 방법이지만 오히려 이로 인해 <code>this</code>를 예측하기 어렵게 만들어 코드 해석을 방해한다는 단점이 있다. 그럼에도 불구하고 ES5 이하의 환경에서는 마땅한 대안이 없기 때문에 실무에서 매우 광범위하게 활용되고 있다.</p>
+<h4 id="2-4-bind-메서드"><a href="#2-4-bind-메서드" class="headerlink" title="2-4. bind 메서드"></a>2-4. bind 메서드</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Function</span>.prototype.bind(thisArg, [, arg1, [, arg2[, ...]]])</span><br></pre></td></tr></table></figure>
+
+<p><code>bind</code> 메서드는 ES5에서 추가된 기능으로, call과 비슷하지만 즉시 호출하지는 않고 넘겨 받은 this 및 인수들을 바탕으로 새로운 함수를 반환하기만 하는 메서드이다. 다시 새로운 함수를 호출할 때 인수를 넘기면 그 인수들은 기존 bind 메서드를 호출할 때 전달했던 인수들의 뒤에 이어서 등록된다. 즉 bind 메서드는 <u>함수에 this를 미리 적용하는 것</u>과 <u>부분 적용 함수를 구현</u>하는 두 가지 목적을 모두 지닌다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> func = <span class="function"><span class="keyword">function</span>(<span class="params">a, b, c, d</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">this</span>, a, b, c, d);</span><br><span class="line">&#125;;</span><br><span class="line">func(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>); <span class="comment">// Window&#123; ... &#125; 1 2 3 4</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> bindFunc1 = func.bind(&#123; <span class="attr">x</span>: <span class="number">1</span> &#125;);</span><br><span class="line">bindFunc1(<span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>); <span class="comment">// &#123; x: 1 &#125; 5 6 7 8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> bindFunc2 = func.bind(&#123; <span class="attr">x</span>: <span class="number">1</span> &#125;, <span class="number">4</span>, <span class="number">5</span>);</span><br><span class="line">bindFunc2(<span class="number">6</span>, <span class="number">7</span>); <span class="comment">// &#123; x: 1 &#125; 4 5 6 7</span></span><br><span class="line">bindFunc2(<span class="number">8</span>, <span class="number">9</span>); <span class="comment">// &#123; x: 1 &#125; 4 5 8 9</span></span><br></pre></td></tr></table></figure>
+
+<p>6번째 줄에서 bindFunc1 변수에는 func에 this를 { x: 1 } 로 지정한 새로운 함수가 담긴다. 이제 7번째 줄에서 bindFunc1을 호출하면 원하는 결과를 얻을 수 있게 된다. 한편 9번째 줄의 bindFunc2 변수에는 func에 this를 { x: 1 }로 지정하고, 앞에서부터 두 개의 인수를 각각 4, 5로 지정한 새로운 함수를 담았다. 이후 10번째 줄에서 매개변수로 6, 7을 넘기면 this 값이 바뀐 것을 제외하고는 최초 func 함수에 4, 5, 6, 7을 넘긴 것과 같은 동작을 한다. 11번째 줄에서도 마찬가지이다. 6번째 줄의 bind는 this만을 지정한 것이고, 9번째 줄의 bind는 this 지정과 함께 부분 적용 함수를 구현한 것이다.</p>
+<p><strong>name 프로퍼티</strong></p>
+<p>bind 메서드를 적용해서 새로 만든 함수는 한 가지 독특한 성질이 있다. 바로 name 프로퍼티에 동사 bind의 수동태인 ‘bound’라는 접두어가 붙는다는 점이다. 어떤 함수의 name 프로퍼티가 ‘bound xxx’라면 이는 곧 함수명이 xxx인 원본 함수에 bind 메서드를 적용한 새로운 함수라는 의미가 되므로 기존의 call이나 apply보다 코드를 추적하기에 더 수월해진 면이 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> func = <span class="function"><span class="keyword">function</span>(<span class="params">a, b, c, d</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">this</span>, a, b, c, d);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">var</span> bindFunc = func.bind(&#123; <span class="attr">x</span>: <span class="number">1</span> &#125;, <span class="number">4</span>, <span class="number">5</span>);</span><br><span class="line"><span class="built_in">console</span>.log(func.name); <span class="comment">// func</span></span><br><span class="line"><span class="built_in">console</span>.log(bindFunc.name); <span class="comment">// bound func</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>상위 컨텍스트의 this를 내부함수나 콜백 함수에 전달하기</strong></p>
+<p><a href="http://localhost:4000/2020/03/01/Javascript-this/#1-3-%ED%95%A8%EC%88%98%EB%A1%9C%EC%84%9C-%ED%98%B8%EC%B6%9C%ED%95%A0-%EB%95%8C-%EA%B7%B8-%ED%95%A8%EC%88%98-%EB%82%B4%EB%B6%80%EC%97%90%EC%84%9C%EC%9D%98-this" target="_blank" rel="noopener">1-3</a>에서 메서드의 내부함수에서 메서드의 this를 그대로 바라보게 하기 위한 방법으로 self 등의 변수를 활용한 우회법이 있었는데, call, apply 또는 bind 메서드를 이용하면 더 깔끔하게 처리할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  outer: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="keyword">this</span>);</span><br><span class="line">    <span class="keyword">var</span> innerFunc = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="keyword">this</span>);</span><br><span class="line">    &#125;;</span><br><span class="line">    innerFunc.call(<span class="keyword">this</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">obj.outer();</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  outer: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="keyword">this</span>);</span><br><span class="line">    <span class="keyword">var</span> innerFunc = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="keyword">this</span>);</span><br><span class="line">    &#125;.bind(<span class="keyword">this</span>);</span><br><span class="line">    innerFunc();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">obj.outer();</span><br></pre></td></tr></table></figure>
+
+<p>또한 콜백 함수를 인자로 받는 함수나 메서드 중에서 기본적으로 콜백 함수 내에서의 this에 관여하는 함수 또는 메서드에 대해서도 bind 메서드를 이용하면 this 값을 사용자의 입맛에 맞게 바꿀 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  logThis: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="keyword">this</span>);</span><br><span class="line">  &#125;,</span><br><span class="line">  logThisLater1: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    setTimeout(<span class="keyword">this</span>.logThis, <span class="number">500</span>);</span><br><span class="line">  &#125;,</span><br><span class="line">  logThisLater2: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    setTimeout(<span class="keyword">this</span>.logThis.bind(<span class="keyword">this</span>), <span class="number">1000</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">obj.logThisLater1(); <span class="comment">// Window &#123; ... &#125;</span></span><br><span class="line">obj.logThisLater2(); <span class="comment">// obj &#123; logThis: f, ... &#125;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-5-화살표-함수의-예외사항"><a href="#2-5-화살표-함수의-예외사항" class="headerlink" title="2-5. 화살표 함수의 예외사항"></a>2-5. 화살표 함수의 예외사항</h4><p>ES6에 새롭게 도입된 화살표 함수는 실행 컨텍스트 생성 시 this를 바인딩하는 과정이 제외됐다. 즉 이 함수 내부에는 this가 아예 없으며, 접근하고자 하면 스코프체인상 가장 가까운 this에 접근하게 된다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> obj = &#123;</span><br><span class="line">  outer: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="keyword">this</span>);</span><br><span class="line">    <span class="keyword">var</span> innerFunc = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="keyword">this</span>);</span><br><span class="line">    &#125;;</span><br><span class="line">    innerFunc();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">obj.outer();</span><br></pre></td></tr></table></figure>
+
+<p>이렇게 하면 별도의 변수로 this를 우회하거나 call/apply/bind를 적용할 필요가 없어 더욱 간결하고 편리하다.</p>
+<h4 id="2-6-별도의-인자로-this를-받는-경우-콜백-함수-내에서의-this"><a href="#2-6-별도의-인자로-this를-받는-경우-콜백-함수-내에서의-this" class="headerlink" title="2-6. 별도의 인자로 this를 받는 경우(콜백 함수 내에서의 this)"></a>2-6. 별도의 인자로 this를 받는 경우(콜백 함수 내에서의 this)</h4><p>콜백 함수를 인자로 받는 메서드 중 일부는 추가로 this로 지정할 객체(thisArg)를 인자로 지정할 수 있는 경우가 있다. 이러한 메서드의 thisArg 값을 지정하면 콜백 함수 내부에서의 this 값을 원하는 대로 변경할 수 있다. 이런 형태는 여러 내부 요소에 대해 같은 동작을 반복 수행해야 하는 배열 메서드에 많이 포진돼 있으며, 같은 이유로 ES6에서 새로 등장한 Set, Map 등의 메서드에도 일부 존재한다. 그중 대표적인 배열 메서드인 forEach의 예는 이렇다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> report = &#123;</span><br><span class="line">  sum: <span class="number">0</span>,</span><br><span class="line">  count: <span class="number">0</span>,</span><br><span class="line">  add: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> args = <span class="built_in">Array</span>.prototype.slice.call(<span class="built_in">arguments</span>);</span><br><span class="line">    args.forEach(<span class="function"><span class="keyword">function</span>(<span class="params">entry</span>) </span>&#123;</span><br><span class="line">      <span class="keyword">this</span>.sum += entry;</span><br><span class="line">      ++<span class="keyword">this</span>.count;</span><br><span class="line">    &#125;, <span class="keyword">this</span>);</span><br><span class="line">  &#125;,</span><br><span class="line">  average: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.sum / <span class="keyword">this</span>.count;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">report.add(<span class="number">60</span>, <span class="number">85</span>, <span class="number">95</span>);</span><br><span class="line"><span class="built_in">console</span>.log(report.sum, report, count, report.average()); <span class="comment">// 240 3 80</span></span><br></pre></td></tr></table></figure>
+
+<p>report 객체에는 sum, count 프로퍼티가 있고, add, average 메서드가 있다. 5번째 줄에서 add 메서드는 argumnets를 배열로 변환해서 args 변수에 담고, 6번째 줄에서는 이 배열을 순회하면서 콜백 함수를 실행하는데, 이때 콜백 함수 내부에서의 this는 forEach 함수의 두 번째 인자로 전달해준 this(9번째 줄)가 바인딩된다. 11번째 줄의 average는 sum 프로퍼티를 count 프로퍼티로 나눈 결과를 반환하는 메서드이다.</p>
+<p>15번째 줄에서 60, 85, 95를 인자로 삼아 add 메서드를 호출하면 이 세 인자를 배열로 만들어 forEach 메서드가 실행된다. 콜백 함수 내부에서의 this는 add 메서드에서의 this가 전달된 상태이므로 add 메서드의 this(report)를 그대로 가리키고 있다. 따라서 배열의 세 요소를 순회하면서 report.sum 값 및 report.count 값이 차례로 바뀌고, 순회를 마친 결과 report.sum에는 240이, report, count에는 3이 담기게 된다.</p>
+<p>배열의 forEach를 예로 들었지만, 이 밖에도 thisArg를 인자로 받는 메서드는 꽤 많이 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Array</span>.prototype.forEach(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.map(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.filter(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.some(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.every(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.find(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.findIndex(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.flatMap(callback[, thisArg])</span><br><span class="line"><span class="built_in">Array</span>.prototype.from(arrayLike[, callback[, thisArg]])</span><br><span class="line"><span class="built_in">Set</span>.prototype.forEach(callback[, thisArg])</span><br><span class="line"><span class="built_in">Map</span>.prototype.forEach(callback[, thisArg])</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="정리"><a href="#정리" class="headerlink" title="정리"></a>정리</h3><p>다음 규칙은 명시적 this 바인딩이 없는 한 늘 성립한다.</p>
+<ul>
+<li>전역공간에서의 this는 전역객체(브라우저에서는 window, Node.js에서는 global)를 참조한다.</li>
+<li>어떤 함수를 메서드로서 호출한 경우 this는 메서드 호출 주체(메서드명 앞의 객체)를 참조한다.</li>
+<li>어떤 함수를 함수로서 호출한 경우 this는 전역객체를 참조한다. 메서드의 내부함수에도 같다.</li>
+<li>콜백 함수 내부에서의 this는 해당 콜백 함수의 제어권을 넘겨받은 함수가 정의한 바에 따르며, 정의하지 않은 경우에는 전역객체를 참조한다.</li>
+<li>생성자 함수에서의 this는 생성될 인스턴스를 참조한다.</li>
+</ul>
+<p>다음은 명시적 this 바인딩이다. 위 규칙에 부합하지 않는 경우에는 다음 내용을 바탕으로 this를 예측할 수 있다.</p>
+<ul>
+<li>call, apply 메서드는 this를 명시적으로 지정하면서 함수 또는 메서드를 호출한다.</li>
+<li>bind 메서드는 this 및 함수에 넘길 인수를 일부 지정해서 새로운 함수를 만든다.</li>
+<li>요소를 순회하면서 콜백 함수를 반복 호출하는 내용의 일부 메서드는 별도의 인자로 this를 받기도 한다.</li>
+</ul>
+<p>출처 : <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId>=206513031" target="_blank" rel="noopener">코어 자바스크립트</a></p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/Javascript/">Javascript</a> <a class="tag tag--primary tag--small t-link" href="/tags/this/">this</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2020/03/01/Javascript-this/"
+                    data-tooltip="[Javascript] this (1)"
+                    aria-label="다음: [Javascript] this (1)"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 dajyu. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2020/03/01/Javascript-this/"
+                    data-tooltip="[Javascript] this (1)"
+                    aria-label="다음: [Javascript] this (1)"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://cok2exe.github.io/2020/03/01/Javascript-this-2/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
+        
+            <h4 id="about-card-name">dajyu</h4>
+        
+            <div id="about-card-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Web frontend</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Asia/Seoul
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
