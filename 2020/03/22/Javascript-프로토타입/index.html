@@ -1,0 +1,608 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="공부방">
+    <title>[Javascript] 프로토타입 - 공부방</title>
+    <meta name="author" content="dajyu">
+    
+        <meta name="keywords" content="React,Typescript,HTML,CSS,Frontend,">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"over.jpg"},"articleBody":"자바스크립트는 프로토타입(prototype) 기반 언어이다. 클래스 기반 언어에서는 ‘상속’을 사용하지만 프로토타입 기반 언어에서는 어떤 객체를 원형으로 삼고 이를 복제(참조)함으로써 상속과 비슷한 효과를 얻는다.\n\n\n1. 프로토타입의 개념 이해1-1. constructor, prototype, instance1var instance = new Constructor();\n\n\n어떤 생성자 함수(Constructor)를 new 연산자와 함께 호출하면\nConstructor에서 정의된 내용을 바탕으로 새로운 인스턴스(instance)가 생성된다.\n이때 instance에는 __proto__ 라는 프로퍼티가 자동으로 부여되는데,\n이 프로퍼티는 Constructor의 prototype이라는 프로퍼티를 참조한다.\n\nprototype과 __proto__의 관계가 프로토타입 개념의 핵심이다. prototype은 객체이다. 이를 참조하는 __proto__ 역시 당연히 객체이다. prototype 객체 내부에는 인스턴스가 사용할 메서드를 저장한다. 그러면 인스턴스에서도 숨겨진 프로퍼티인 __proto__를 통해 이 메서드들에 접근할 수 있게 된다.\n예를 들어, Person이라는 생성자 함수의 prototype에 getName이라는 메서드를 지정했다고 하자.\n123456var Person = function(name) &#123;  this._name = name;&#125;;Person.prototype.getName = function() &#123;  return this._name;&#125;;\n\n이제 Person 인스턴스는 __proto__ 프로퍼티를 통해 getName을 호출할 수 있다.\n12var suzi = new Person(\"suzi\");suzi.__proto__.getName(); // undefined\n\n왜냐하면 instance의 __proto__가 Constructor의 prototype 프로퍼티를 참조하므로 결국 둘은 같은 객체를 바라보기 때문이다.\nsuzi가 나오지 않고 undefined가 나온 것보다는 ‘에러가 발생하지 않았다’는 점이 우선이다. 어떤 변수를 실행해 undefined가 나왔다는 것은 이 변수가 ‘호출할 수 있는 함수’에 해당한다는 것을 의미한다.\n위의 getName은 this에 바인딩된 대상이 잘못 지정되어 있기에 발생하는 문제이다.\n어떤 함수를 메서드로서 호출할 때는 메서드명 바로 앞의 객체가 곧 this가 된다고 했다. thomas.__proto__.getName()에서 getName 함수 내부에서의 this는 thomas가 아닌 thomas.__proto__라는 객체가 되는 것이다.\n그럼 만약 __proto__ 객체에 name 프로퍼티가 있다면 어떨까?\n123var suzi = new Person(\"suzi\");suzi.__proto__.name = \"Suzi__proto__\";suzi.__proto__.getName(); // Suzi__proto__\n\n고로 관건은 this이다! this를 인스턴스로 할 수 있다면 좋겠다. 그 방법은 __proto__ 없이 인스턴스에서 곧바로 메서드를 쓰는 것이다.\n1234var suzi = new Person(\"Suzi\", 28);suzi.getName(); // Suzivar iu = new Person(\"Jieun\", 28);iu.getName(); // Jieun\n\n__proto__는 생략 가능한 프로퍼티이다. 따라서 위와 같은 형태(instance가 this가 되는 형태)로 호출하는 것이 가능하다.\n\nnew 연산자로 Constructor를 호출하면 instance가 만들어지는데, 이 instance의 생략 가능한 프로퍼티인 __proto__는 Constructor의 prototype을 참조한다!\n\n\n생성자 함수의 prototype에 어떤 메서드나 프로퍼티가 있다면 인스턴스에서도 마치 자신의 것처럼 해당 메서드나 프로퍼티에 접근할 수 있게 된다.\n\n1-2. constructor 프로퍼티생성자 함수의 프로퍼티인 prototype 객체 내부에는 constructor라는 프로퍼티가 있다. 인스턴스의 __proto__ 객체 내부에도 마찬가지이다. 이 프로퍼티는 단어 그대로 원래의 생성자 함수(자기 자신)를 참조한다.\nconstructor는 읽기 전용 속성이 부여된 예외적인 경우(기본형 리터럴 변수 - number, string, boolean)를 제외하고는 값을 바꿀 수 있다.\n다음 각 줄은 모두 동일한 대상을 가리킨다.\n12345[Constructor][insatnce].__proto__.constructor[instance].constructorObject.getPrototypeOf([instance]).constructor[Constructor].prototype.constructor\n\n둘째, 다음 각 줄은 모두 동일한 객체(prototype)에 접근할 수 있다.\n1234[Constructor].prototype[instance].__proto__[instance]Object.getPrototypeOf([instance])\n\n\n2. 프로토타입 체인2-1. 메서드 오버라이드prototype 객체를 참조하는 __proto__ 를 생략하면 인스턴스는 prototype에 정의된 프로퍼티나 메서드를 마치 자신의 것처럼 사용할 수 있다고 했다. 그런데 만약 인스턴스가 동일한 이름의 프로퍼티 또는 메서드를 가지고 있는 상황이라면 어떨까?\n123456789101112var Person = function(name) &#123;  this.name = name;&#125;;Person.prototype.getName = function() &#123;  return this.name;&#125;;var iu = new Person(\"지금\");iu.getName = function() &#123;  return \"바로 \" + this.name;&#125;;console.log(iu.getName()); // 바로 지금\n\niu.__proto__.getName이 아닌 iu 객체에 있는 getName 메서드가 호출됐다. 이러한 현상을 메서드 오버라이드라고 한다. 메서드 위에 메서드를 덮어씌웠다는 표현이다. 원본을 제거하고 다른 대상으로 교체하는 것이 아닌 원본이 그대로 있는 상태에서 다른 대상을 그 위에 얹는 이미지를 떠올리면 정확하다.\n자바스크립트 엔진이 getName 이라는 메서드를 찾는 방식은 가장 가까운 대상인 자신의 프로퍼티를 검색하고, 없으면 그다음으로 가까운 대상인 __proto__를 검색하는 순서로 진행된다.\n1console.log(iu.__proto__.getName());\n\n위처럼 하면 prototype에 있는 메서드에 접근할 수 있다.\n2-2. 프로토타입 체인__proto__는 생략이 가능하다. 그렇기 때문에 배열이 Array.prototype 내부의 메서드를 마치 자신의 것처럼 실행할 수 있다. 마찬가지로 Object.prototype 내부의 메서드도 자신의 것처럼 실행할 수 있다. 생략 가능한 __proto__를 한 번 더 따라가면 Object.prototype을 참조할 수 있기 때문이다.\n어떤 데이터의 __proto__ 프로퍼티 내부에 다시 __proto__ 프로퍼티가 연쇄적으로 이어진 것을 프로토타입 체인이라 하고, 이 체인을 따라가며 검색하는 것을 프로토타입 체이닝이라고 한다.\n자바스크립트 데이터는 모두 프로토타입 체인 구조를 지닌다.\n2-3. 객체 전용 메서드의 예외사항어떤 생성자 함수이든 prototype은 반드시 객체이기 때문에 Object.prototype이 언제나 프로토타입 체인의 최상단에 존재하게 된다. 따라서 객체에서만 사용할 메서드는 다른 여느 데이터 타입처럼 프로토타입 객체 안에 정의할 수가 없다. 객체에서만 사용할 메서드를 Object.prototype 내부에 정의한다면 다른 데이터 타입도 해당 메서드를 사용할 수 있게 되기 때문이다.\n객체만을 대상으로 동작하는 객체 전용 메서드들은 부득이 Object.prototype이 아닌 Object에 스태틱 메서드로 부여할 수밖에 없었다.\n2-4. 다중 프로토타입 체인12345678var Grade = function() &#123;  var args = Array.prototype.slice.call(arguments);  for (var i = 0; i &lt; args.length; i++) &#123;    this[i] = args[i];  &#125;  this.length = args.length;&#125;;var g = new Grade(100, 80);\n\n변수 g는 Grade의 인스턴스를 바라본다. Grade의 인스턴스는 여러 개의 인자를 받아 각각 순서대로 인덱싱해서 저장하고 length 프로퍼티가 존재하는 등으로 배열의 형태를 지니지만, 배열의 메서드는 사용할 수 없는 유사배열객체이다. 인스턴스에서 직접 배열 메서드를 쓸 수 있게끔 하고 싶다면, g.__proto__ 즉, Grade.prototype이 배열의 인스턴스를 바라보게 하면 된다.\n1Grade.prototype = [];\n\n위 명령에 의해 서로 별개로 분리돼 있던 데이터가 연결되어 하나의 프로토타입 체인 형태를 지니게 된다.\n이제는 Grade의 인스턴스인 g에서 직접 배열의 메서드를 사용할 수 있다.\n12345console.log(g); // Grade(2) [100, 80]g.pop;console.log(g); // Grade(1) [100]g.push(90);console.log(g); // Grade(2) [100, 90]\n\n\n3. 정리어떤 생성자 함수를 new 연산자와 함께 호출하면 Constructor에서 정의된 내용을 바탕으로 새로운 인스턴스가 생성되는데, 이 인스턴스에는 __proto__라는, Constructor의 prototype 프로퍼티를 참조하는 프로퍼티가 자동으로 부여된다. __proto__는 생략 가능한 속성이라서, 인스턴스는 Constructor.prototype의 메서드를 마치 자신의 메서드인 것처럼 호출할 수 있다.\nConstructor.prototype에는 constructor라는 프로퍼티가 있는데, 이는 다시 생성자 함수 자신을 가리킨다. 이 프로퍼티는 인스턴스가 자신의 생성자 함수가 무엇인지를 알고자 할 때 필요한 수단이다.\n직각삼각형의 대각선 방향, 즉 __proto__ 방향을 계속 찾아가면 최종적으로는 Object.prototype에 당도하게 된다. 이런 식으로 __proto__ 안에 다시 __proto__를 찾아가는 과정을 프로토타입 체이닝이라 하며, 이를 통해 각 프로토타입 메서드를 자신의 것처럼 호출할 수 있다.\nObject.prototype 에는 모든 데이터 타입에서 사용할 수 있는 범용적인 메서드만이 존재한다.\n출처 : 코어 자바스크립트\n","dateCreated":"2020-03-22T10:42:30+09:00","dateModified":"2020-03-22T11:47:36+09:00","datePublished":"2020-03-22T10:42:30+09:00","description":"자바스크립트는 프로토타입(prototype) 기반 언어이다. 클래스 기반 언어에서는 ‘상속’을 사용하지만 프로토타입 기반 언어에서는 어떤 객체를 원형으로 삼고 이를 복제(참조)함으로써 상속과 비슷한 효과를 얻는다.","headline":"[Javascript] 프로토타입","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"},"publisher":{"@type":"Organization","name":"dajyu","sameAs":["https://github.com/cok2exe","http://stackoverflow.com/cok2exe"],"image":"over.jpg","logo":{"@type":"ImageObject","url":"over.jpg"}},"url":"https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/","keywords":"Javascript, 프로토타입, prototype"}</script>
+    <meta name="description" content="자바스크립트는 프로토타입(prototype) 기반 언어이다. 클래스 기반 언어에서는 ‘상속’을 사용하지만 프로토타입 기반 언어에서는 어떤 객체를 원형으로 삼고 이를 복제(참조)함으로써 상속과 비슷한 효과를 얻는다.">
+<meta name="keywords" content="Javascript,프로토타입,prototype">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="[Javascript] 프로토타입">
+<meta property="og:url" content="https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/index.html">
+<meta property="og:site_name" content="공부방">
+<meta property="og:description" content="자바스크립트는 프로토타입(prototype) 기반 언어이다. 클래스 기반 언어에서는 ‘상속’을 사용하지만 프로토타입 기반 언어에서는 어떤 객체를 원형으로 삼고 이를 복제(참조)함으로써 상속과 비슷한 효과를 얻는다.">
+<meta property="og:locale" content="ko">
+<meta property="og:updated_time" content="2020-03-22T02:47:36.965Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[Javascript] 프로토타입">
+<meta name="twitter:description" content="자바스크립트는 프로토타입(prototype) 기반 언어이다. 클래스 기반 언어에서는 ‘상속’을 사용하지만 프로토타입 기반 언어에서는 어떤 객체를 원형으로 삼고 이를 복제(참조)함으로써 상속과 비슷한 효과를 얻는다.">
+    
+    
+        
+    
+    
+        <meta property="og:image" content="https://cok2exe.github.io/assets/images/over.jpg"/>
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/all.css">
+    <link rel="stylesheet" href="/assets/css/jquery.fancybox.css">
+    <link rel="stylesheet" href="/assets/css/thumbs.css">
+    <link rel="stylesheet" href="/assets/css/tranquilpeak.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            공부방
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="링크 열기: /#about"
+            >
+        
+        
+            <img class="header-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a
+                    href="/#about"
+                    aria-label="저자에 대해 더 알아보기"
+                >
+                    <img class="sidebar-profile-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
+                </a>
+                <h4 class="sidebar-profile-name">dajyu</h4>
+                
+                    <h5 class="sidebar-profile-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</h5>
+                
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="About"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">About</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/cok2exe" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://stackoverflow.com/cok2exe" target="_blank" rel="noopener" title="Stack Overflow">
+                    
+                        <i class="sidebar-button-icon fab fa-stack-overflow" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Stack Overflow</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            [Javascript] 프로토타입
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2020-03-22T10:42:30+09:00">
+	
+		    2020/03/22
+    	
+    </time>
+    
+        <span>카테고리 </span>
+        
+    <a class="category-link" href="/categories/Javascript/">Javascript</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p>자바스크립트는 프로토타입(prototype) 기반 언어이다. 클래스 기반 언어에서는 ‘상속’을 사용하지만 프로토타입 기반 언어에서는 어떤 객체를 원형으로 삼고 이를 복제(참조)함으로써 상속과 비슷한 효과를 얻는다.</p>
+<a id="more"></a>
+
+<h3 id="1-프로토타입의-개념-이해"><a href="#1-프로토타입의-개념-이해" class="headerlink" title="1. 프로토타입의 개념 이해"></a>1. 프로토타입의 개념 이해</h3><h4 id="1-1-constructor-prototype-instance"><a href="#1-1-constructor-prototype-instance" class="headerlink" title="1-1. constructor, prototype, instance"></a>1-1. constructor, prototype, instance</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> instance = <span class="keyword">new</span> Constructor();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>어떤 생성자 함수(Constructor)를 <code>new</code> 연산자와 함께 호출하면</li>
+<li>Constructor에서 정의된 내용을 바탕으로 새로운 인스턴스(instance)가 생성된다.</li>
+<li>이때 instance에는 <code>__proto__</code> 라는 프로퍼티가 자동으로 부여되는데,</li>
+<li>이 프로퍼티는 Constructor의 <code>prototype</code>이라는 프로퍼티를 참조한다.</li>
+</ul>
+<p><code>prototype</code>과 <code>__proto__</code>의 관계가 프로토타입 개념의 핵심이다. prototype은 객체이다. 이를 참조하는 <code>__proto__</code> 역시 당연히 객체이다. prototype 객체 내부에는 인스턴스가 사용할 메서드를 저장한다. 그러면 인스턴스에서도 숨겨진 프로퍼티인 <code>__proto__</code>를 통해 이 메서드들에 접근할 수 있게 된다.</p>
+<p>예를 들어, Person이라는 생성자 함수의 prototype에 getName이라는 메서드를 지정했다고 하자.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Person = <span class="function"><span class="keyword">function</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>._name = name;</span><br><span class="line">&#125;;</span><br><span class="line">Person.prototype.getName = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">this</span>._name;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>이제 Person 인스턴스는 <code>__proto__</code> 프로퍼티를 통해 getName을 호출할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> suzi = <span class="keyword">new</span> Person(<span class="string">"suzi"</span>);</span><br><span class="line">suzi.__proto__.getName(); <span class="comment">// undefined</span></span><br></pre></td></tr></table></figure>
+
+<p>왜냐하면 instance의 <code>__proto__</code>가 Constructor의 prototype 프로퍼티를 참조하므로 결국 둘은 같은 객체를 바라보기 때문이다.</p>
+<p>suzi가 나오지 않고 undefined가 나온 것보다는 ‘에러가 발생하지 않았다’는 점이 우선이다. 어떤 변수를 실행해 undefined가 나왔다는 것은 이 변수가 ‘호출할 수 있는 함수’에 해당한다는 것을 의미한다.</p>
+<p>위의 getName은 this에 바인딩된 대상이 잘못 지정되어 있기에 발생하는 문제이다.</p>
+<p>어떤 함수를 메서드로서 호출할 때는 메서드명 바로 앞의 객체가 곧 this가 된다고 했다. <code>thomas.__proto__.getName()</code>에서 getName 함수 내부에서의 this는 thomas가 아닌 <code>thomas.__proto__</code>라는 객체가 되는 것이다.</p>
+<p>그럼 만약 <code>__proto__</code> 객체에 name 프로퍼티가 있다면 어떨까?</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> suzi = <span class="keyword">new</span> Person(<span class="string">"suzi"</span>);</span><br><span class="line">suzi.__proto__.name = <span class="string">"Suzi__proto__"</span>;</span><br><span class="line">suzi.__proto__.getName(); <span class="comment">// Suzi__proto__</span></span><br></pre></td></tr></table></figure>
+
+<p>고로 관건은 this이다! this를 인스턴스로 할 수 있다면 좋겠다. 그 방법은 <code>__proto__</code> 없이 인스턴스에서 곧바로 메서드를 쓰는 것이다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> suzi = <span class="keyword">new</span> Person(<span class="string">"Suzi"</span>, <span class="number">28</span>);</span><br><span class="line">suzi.getName(); <span class="comment">// Suzi</span></span><br><span class="line"><span class="keyword">var</span> iu = <span class="keyword">new</span> Person(<span class="string">"Jieun"</span>, <span class="number">28</span>);</span><br><span class="line">iu.getName(); <span class="comment">// Jieun</span></span><br></pre></td></tr></table></figure>
+
+<p><code>__proto__</code>는 <strong>생략 가능</strong>한 프로퍼티이다. 따라서 위와 같은 형태(instance가 this가 되는 형태)로 호출하는 것이 가능하다.</p>
+<blockquote>
+<p>new 연산자로 Constructor를 호출하면 instance가 만들어지는데, 이 instance의 생략 가능한 프로퍼티인 <code>__proto__</code>는 Constructor의 prototype을 참조한다!</p>
+</blockquote>
+<blockquote>
+<p>생성자 함수의 prototype에 어떤 메서드나 프로퍼티가 있다면 인스턴스에서도 마치 자신의 것처럼 해당 메서드나 프로퍼티에 접근할 수 있게 된다.</p>
+</blockquote>
+<h4 id="1-2-constructor-프로퍼티"><a href="#1-2-constructor-프로퍼티" class="headerlink" title="1-2. constructor 프로퍼티"></a>1-2. constructor 프로퍼티</h4><p>생성자 함수의 프로퍼티인 prototype 객체 내부에는 constructor라는 프로퍼티가 있다. 인스턴스의 <code>__proto__</code> 객체 내부에도 마찬가지이다. 이 프로퍼티는 단어 그대로 원래의 생성자 함수(자기 자신)를 참조한다.</p>
+<p>constructor는 읽기 전용 속성이 부여된 예외적인 경우(기본형 리터럴 변수 - number, string, boolean)를 제외하고는 값을 바꿀 수 있다.</p>
+<p>다음 각 줄은 모두 동일한 대상을 가리킨다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[Constructor]</span><br><span class="line">[insatnce].__proto__.constructor</span><br><span class="line">[instance].constructor</span><br><span class="line">Object.getPrototypeOf([instance]).constructor</span><br><span class="line">[Constructor].prototype.constructor</span><br></pre></td></tr></table></figure>
+
+<p>둘째, 다음 각 줄은 모두 동일한 객체(prototype)에 접근할 수 있다.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[Constructor].prototype</span><br><span class="line">[instance].__proto__</span><br><span class="line">[instance]</span><br><span class="line">Object.getPrototypeOf([instance])</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="2-프로토타입-체인"><a href="#2-프로토타입-체인" class="headerlink" title="2. 프로토타입 체인"></a>2. 프로토타입 체인</h3><h4 id="2-1-메서드-오버라이드"><a href="#2-1-메서드-오버라이드" class="headerlink" title="2-1. 메서드 오버라이드"></a>2-1. 메서드 오버라이드</h4><p>prototype 객체를 참조하는 <code>__proto__</code> 를 생략하면 인스턴스는 prototype에 정의된 프로퍼티나 메서드를 마치 자신의 것처럼 사용할 수 있다고 했다. 그런데 만약 인스턴스가 동일한 이름의 프로퍼티 또는 메서드를 가지고 있는 상황이라면 어떨까?</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Person = <span class="function"><span class="keyword">function</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">this</span>.name = name;</span><br><span class="line">&#125;;</span><br><span class="line">Person.prototype.getName = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">this</span>.name;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> iu = <span class="keyword">new</span> Person(<span class="string">"지금"</span>);</span><br><span class="line">iu.getName = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">"바로 "</span> + <span class="keyword">this</span>.name;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">console</span>.log(iu.getName()); <span class="comment">// 바로 지금</span></span><br></pre></td></tr></table></figure>
+
+<p><code>iu.__proto__.getName</code>이 아닌 iu 객체에 있는 getName 메서드가 호출됐다. 이러한 현상을 메서드 오버라이드라고 한다. 메서드 위에 메서드를 덮어씌웠다는 표현이다. 원본을 제거하고 다른 대상으로 교체하는 것이 아닌 원본이 그대로 있는 상태에서 다른 대상을 그 위에 얹는 이미지를 떠올리면 정확하다.</p>
+<p>자바스크립트 엔진이 getName 이라는 메서드를 찾는 방식은 가장 가까운 대상인 자신의 프로퍼티를 검색하고, 없으면 그다음으로 가까운 대상인 <code>__proto__</code>를 검색하는 순서로 진행된다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(iu.__proto__.getName());</span><br></pre></td></tr></table></figure>
+
+<p>위처럼 하면 prototype에 있는 메서드에 접근할 수 있다.</p>
+<h4 id="2-2-프로토타입-체인"><a href="#2-2-프로토타입-체인" class="headerlink" title="2-2. 프로토타입 체인"></a>2-2. 프로토타입 체인</h4><p><code>__proto__</code>는 생략이 가능하다. 그렇기 때문에 배열이 Array.prototype 내부의 메서드를 마치 자신의 것처럼 실행할 수 있다. 마찬가지로 Object.prototype 내부의 메서드도 자신의 것처럼 실행할 수 있다. 생략 가능한 <code>__proto__</code>를 한 번 더 따라가면 Object.prototype을 참조할 수 있기 때문이다.</p>
+<p>어떤 데이터의 <code>__proto__</code> 프로퍼티 내부에 다시 <code>__proto__</code> 프로퍼티가 연쇄적으로 이어진 것을 프로토타입 체인이라 하고, 이 체인을 따라가며 검색하는 것을 프로토타입 체이닝이라고 한다.</p>
+<p>자바스크립트 데이터는 모두 프로토타입 체인 구조를 지닌다.</p>
+<h4 id="2-3-객체-전용-메서드의-예외사항"><a href="#2-3-객체-전용-메서드의-예외사항" class="headerlink" title="2-3. 객체 전용 메서드의 예외사항"></a>2-3. 객체 전용 메서드의 예외사항</h4><p>어떤 생성자 함수이든 prototype은 반드시 객체이기 때문에 Object.prototype이 언제나 프로토타입 체인의 최상단에 존재하게 된다. 따라서 객체에서만 사용할 메서드는 다른 여느 데이터 타입처럼 프로토타입 객체 안에 정의할 수가 없다. 객체에서만 사용할 메서드를 Object.prototype 내부에 정의한다면 다른 데이터 타입도 해당 메서드를 사용할 수 있게 되기 때문이다.</p>
+<p>객체만을 대상으로 동작하는 객체 전용 메서드들은 부득이 Object.prototype이 아닌 Object에 스태틱 메서드로 부여할 수밖에 없었다.</p>
+<h4 id="2-4-다중-프로토타입-체인"><a href="#2-4-다중-프로토타입-체인" class="headerlink" title="2-4. 다중 프로토타입 체인"></a>2-4. 다중 프로토타입 체인</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Grade = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> args = <span class="built_in">Array</span>.prototype.slice.call(<span class="built_in">arguments</span>);</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; args.length; i++) &#123;</span><br><span class="line">    <span class="keyword">this</span>[i] = args[i];</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">this</span>.length = args.length;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">var</span> g = <span class="keyword">new</span> Grade(<span class="number">100</span>, <span class="number">80</span>);</span><br></pre></td></tr></table></figure>
+
+<p>변수 g는 Grade의 인스턴스를 바라본다. Grade의 인스턴스는 여러 개의 인자를 받아 각각 순서대로 인덱싱해서 저장하고 length 프로퍼티가 존재하는 등으로 배열의 형태를 지니지만, 배열의 메서드는 사용할 수 없는 유사배열객체이다. 인스턴스에서 직접 배열 메서드를 쓸 수 있게끔 하고 싶다면, <code>g.__proto__</code> 즉, Grade.prototype이 배열의 인스턴스를 바라보게 하면 된다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Grade.prototype = [];</span><br></pre></td></tr></table></figure>
+
+<p>위 명령에 의해 서로 별개로 분리돼 있던 데이터가 연결되어 하나의 프로토타입 체인 형태를 지니게 된다.</p>
+<p>이제는 Grade의 인스턴스인 g에서 직접 배열의 메서드를 사용할 수 있다.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(g); <span class="comment">// Grade(2) [100, 80]</span></span><br><span class="line">g.pop;</span><br><span class="line"><span class="built_in">console</span>.log(g); <span class="comment">// Grade(1) [100]</span></span><br><span class="line">g.push(<span class="number">90</span>);</span><br><span class="line"><span class="built_in">console</span>.log(g); <span class="comment">// Grade(2) [100, 90]</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-정리"><a href="#3-정리" class="headerlink" title="3. 정리"></a>3. 정리</h3><p>어떤 생성자 함수를 new 연산자와 함께 호출하면 Constructor에서 정의된 내용을 바탕으로 새로운 인스턴스가 생성되는데, 이 인스턴스에는 <code>__proto__</code>라는, Constructor의 prototype 프로퍼티를 참조하는 프로퍼티가 자동으로 부여된다. <code>__proto__</code>는 생략 가능한 속성이라서, 인스턴스는 Constructor.prototype의 메서드를 마치 자신의 메서드인 것처럼 호출할 수 있다.</p>
+<p>Constructor.prototype에는 constructor라는 프로퍼티가 있는데, 이는 다시 생성자 함수 자신을 가리킨다. 이 프로퍼티는 인스턴스가 자신의 생성자 함수가 무엇인지를 알고자 할 때 필요한 수단이다.</p>
+<p>직각삼각형의 대각선 방향, 즉 <code>__proto__</code> 방향을 계속 찾아가면 최종적으로는 Object.prototype에 당도하게 된다. 이런 식으로 <code>__proto__</code> 안에 다시 <code>__proto__</code>를 찾아가는 과정을 프로토타입 체이닝이라 하며, 이를 통해 각 프로토타입 메서드를 자신의 것처럼 호출할 수 있다.</p>
+<p>Object.prototype 에는 모든 데이터 타입에서 사용할 수 있는 범용적인 메서드만이 존재한다.</p>
+<p>출처 : <a href="https://www.aladin.co.kr/shop/wproduct.aspx?ItemId>=206513031" target="_blank" rel="noopener">코어 자바스크립트</a></p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">태그</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/Javascript/">Javascript</a> <a class="tag tag--primary tag--small t-link" href="/tags/prototype/">prototype</a> <a class="tag tag--primary tag--small t-link" href="/tags/프로토타입/">프로토타입</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2020/03/15/Javascript-클로저/"
+                    data-tooltip="[Javascript] 클로저"
+                    aria-label="다음: [Javascript] 클로저"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2020 dajyu. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">이전</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2020/03/15/Javascript-클로저/"
+                    data-tooltip="[Javascript] 클로저"
+                    aria-label="다음: [Javascript] 클로저"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">다음</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="이 포스트 공유하기"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                    title="Facebook에 공유하기"
+                    aria-label="Facebook에 공유하기"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                    title="Twitter에 공유하기"
+                    aria-label="Twitter에 공유하기"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                    title="Google+에 공유하기"
+                    aria-label="Google+에 공유하기"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="맨 위로">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                        aria-label="Facebook에 공유하기"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Facebook에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                        aria-label="Twitter에 공유하기"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Twitter에 공유하기</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://cok2exe.github.io/2020/03/22/Javascript-프로토타입/"
+                        aria-label="Google+에 공유하기"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Google+에 공유하기</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/over.jpg" alt="저자 이미지"/>
+        
+            <h4 id="about-card-name">dajyu</h4>
+        
+            <div id="about-card-bio"><p>혼잣말 공부러(코드사냥꾼)</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Web frontend</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker-alt"></i>
+                <br/>
+                Asia/Seoul
+            </div>
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/jquery.fancybox.js"></script>
+<script src="/assets/js/thumbs.js"></script>
+<script src="/assets/js/tranquilpeak.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>
